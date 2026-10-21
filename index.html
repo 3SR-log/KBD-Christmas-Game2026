@@ -410,6 +410,8 @@
   let score = 0;
   let remainingTime = GAME_DURATION;
   let timerId = null;
+  let startTimeMs = 0; // 開始時刻（回復計算用）
+  let addedTimeMs = 0; // 回復させた累計ミリ秒
   let currentTargetColor = "";
   let foundBear = false;
   let blackTimerId = null;
@@ -504,6 +506,7 @@
     remainingTime = GAME_DURATION;
     foundBear = false;
     secretHealCount = 0; // 隠し回復回数リセット
+    addedTimeMs = 0;
 
     document.getElementById('current-score').innerText = score;
     document.getElementById('timer-sec').innerText = Math.ceil(remainingTime);
@@ -516,9 +519,9 @@
     nextQuestion();
 
     // 0.1秒ごとにトナカイのバーと秒数テキストをスムーズに更新
-    const startTime = Date.now();
+    startTimeMs = Date.now();
     timerId = setInterval(() => {
-      const elapsed = (Date.now() - startTime) / 1000;
+      const elapsed = (Date.now() - startTimeMs - addedTimeMs) / 1000;
       remainingTime = GAME_DURATION - elapsed;
 
       if (remainingTime <= 0) {
@@ -535,13 +538,13 @@
     }, 100);
   }
 
-  // 🤫 秘密のトナカイ回復ギミック
+  // 🤫 秘密のトナカイ回復ギミック（時間を増やす処理）
   function triggerSecretHeal() {
     if (remainingTime <= 0) return;
     if (secretHealCount >= MAX_SECRET_HEAL) return; // 1ゲーム3回まで
 
     secretHealCount++;
-    remainingTime = Math.min(GAME_DURATION, remainingTime + 2.0); // +2秒回復（最大制限時間まで）
+    addedTimeMs += 2000; // 2000ミリ秒（2秒）ぶん経過時間を巻き戻す
 
     // トナカイジャンプ演出
     const runner = document.getElementById('reindeer-runner');
