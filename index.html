@@ -436,13 +436,12 @@
     }, 1000);
   }
 
-  ffunction nextQuestion() {
+  function nextQuestion() {
     // ★ テスト用：常にくまさんを選択（100%）
     let selectedObj = bearColor;
     foundBear = true;
 
     currentTargetColor = selectedObj.id;
-    // （以下略）
 
     // プレゼントアイコン（SVG）の更新
     document.getElementById('target-present-icon').innerHTML = selectedObj.svg;
@@ -543,7 +542,7 @@
     setTimeout(() => {
       resetBtn.disabled = false;
       resetBtn.style.opacity = "1";
-    }, 2500); // ★ 2.5秒に変更しました
+    }, 2500);
   }
 
   function sendScore() {
