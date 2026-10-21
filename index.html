@@ -144,6 +144,19 @@
     .info-text { font-size: 14px; color: #475569; }
     .timer-text { font-size: 22px; color: #dc2626; font-weight: bold; }
 
+    /* くまさん発見案内バッジ */
+    .bear-badge {
+      background: #fef3c7;
+      color: #b45309;
+      border: 2px dashed #f59e0b;
+      padding: 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 14px;
+      margin: 8px 0;
+      display: inline-block;
+    }
+
     /* 虹色グラアニメーション */
     @keyframes rainbow {
       0% { stop-color: #ff0000; }
@@ -158,7 +171,7 @@
 <body>
 
 <div class="card">
-  <h1>🎁 サンタのプレゼント仕分け🎅</h1>
+  <h1>🎁 サンタのプレゼント仕分け 🎅</h1>
 
   <!-- 1. スタート画面 -->
   <div id="start-screen">
@@ -232,13 +245,18 @@
     
     <div class="score-display" id="final-score">0 点</div>
 
+    <!-- くまさん遭遇メッセージ -->
+    <div id="bear-found-msg" class="bear-badge hidden">
+      🧸 超激レア「くまさん」が出現しました！<br>スクショしてみんなに見せてね！📸
+    </div>
+
     <!-- 自動送信ボタン -->
     <button id="send-btn" class="btn-main" onclick="sendScore()" style="background: #f59e0b; margin-bottom: 12px; width: 100%;">
       🚀 スコアを送信する！
     </button>
     <div id="send-status" style="font-size: 14px; color: #0284c7; margin-bottom: 15px;"></div>
 
-    <button onclick="resetGame()" style="background: #64748b; color: #fff; border:none; padding:10px 20px; border-radius:20px; font-size: 14px;">もう一度あそぶ</button>
+    <button id="reset-btn" onclick="resetGame()" style="background: #64748b; color: #fff; border:none; padding:10px 20px; border-radius:20px; font-size: 14px;">もう一度あそぶ</button>
   </div>
 </div>
 
@@ -252,8 +270,9 @@
   let timerId = null;
   let currentTargetColor = "";
   let questionStartTime = 0;
+  let foundBear = false; // くまさん遭遇フラグ
 
-  // 各色のSVG画像データ（通常色＋レインボー）
+  // 各色のSVG画像データ（通常色＋レインボー＋くまさん）
   const colors = [
     { 
       id: 'red', 
@@ -319,6 +338,32 @@
           </svg>`
   };
 
+  // 超激レアくまさん（1%の確率）
+  const bearColor = {
+    id: 'bear',
+    name: '🧸 奇跡のくまさん 🧸',
+    colorCode: '#f59e0b',
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+            <!-- 耳 -->
+            <circle cx="28" cy="28" r="14" fill="#b45309" />
+            <circle cx="28" cy="28" r="8" fill="#fef3c7" />
+            <circle cx="72" cy="28" r="14" fill="#b45309" />
+            <circle cx="72" cy="28" r="8" fill="#fef3c7" />
+            <!-- 顔 -->
+            <circle cx="50" cy="52" r="32" fill="#d97706" />
+            <!-- 口元 -->
+            <ellipse cx="50" cy="60" rx="14" ry="10" fill="#fef3c7" />
+            <ellipse cx="50" cy="55" rx="5" ry="3.5" fill="#78350f" />
+            <!-- 目 -->
+            <circle cx="38" cy="46" r="4" fill="#451a03" />
+            <circle cx="62" cy="46" r="4" fill="#451a03" />
+            <!-- サンタ帽子 -->
+            <path d="M 32 30 Q 50 5, 68 30 Z" fill="#dc2626" />
+            <circle cx="50" cy="12" r="6" fill="#ffffff" />
+            <rect x="30" y="27" width="40" height="6" fill="#ffffff" rx="3" />
+          </svg>`
+  };
+
   function toggleCustomInput() {
     const select = document.getElementById('name-select');
     const container = document.getElementById('custom-name-container');
@@ -347,6 +392,7 @@
     playerName = nameInput;
     score = 0;
     timeLeft = 15;
+    foundBear = false;
 
     document.getElementById('current-score').innerText = score;
     document.getElementById('timer').innerText = timeLeft;
@@ -370,11 +416,14 @@
   }
 
   function nextQuestion() {
-    // 5%の確率で虹色プレミアムボックス登場！
-    const isRainbow = Math.random() < 0.05;
+    const rand = Math.random();
     let selectedObj;
 
-    if (isRainbow) {
+    // 1%の確率でくまさん、7%の確率でレインボー
+    if (rand < 0.01) {
+      selectedObj = bearColor;
+      foundBear = true;
+    } else if (rand < 0.08) { // 0.01 + 0.07 = 0.08
       selectedObj = rainbowColor;
     } else {
       selectedObj = colors[Math.floor(Math.random() * colors.length)];
@@ -397,13 +446,25 @@
     const reactionTime = Date.now() - questionStartTime;
     const fb = document.getElementById('feedback');
 
-    // 虹色の場合はどれを押しても正解！
-    if (currentTargetColor === 'rainbow') {
-      score += 30; // プレミアムボーナス
+    // 1. くまさんの場合はどれを押しても+100点＆次の色へ
+    if (currentTargetColor === 'bear') {
+      score += 100;
+      fb.innerText = "🧸 奇跡発生! +100点! 🧸";
+      fb.style.color = "#d97706";
+      document.getElementById('current-score').innerText = score;
+      nextQuestion();
+    }
+    // 2. 虹色の場合はどれを押しても+30点＆次の色へ
+    else if (currentTargetColor === 'rainbow') {
+      score += 30;
       fb.innerText = "🌟 BONUS +30! 🌟";
       fb.style.color = "#d97706";
-    } else if (selectedColor === currentTargetColor) {
-      score += 10; // 正解
+      document.getElementById('current-score').innerText = score;
+      nextQuestion();
+    }
+    // 3. 通常色で正解した場合（次の色へ進む）
+    else if (selectedColor === currentTargetColor) {
+      score += 10;
 
       // 階級スピード判定
       if (reactionTime < 350) {
@@ -416,14 +477,18 @@
         fb.innerText = "🛷 見習いサンタ";
         fb.style.color = "#16a34a";
       }
-    } else {
-      score = Math.max(0, score - 5); // お手付き
-      fb.innerText = "❄️ トナカイつまずく! (-5)";
-      fb.style.color = "#64748b";
-    }
 
-    document.getElementById('current-score').innerText = score;
-    nextQuestion();
+      document.getElementById('current-score').innerText = score;
+      nextQuestion(); // 正解した時だけ次の問題へ！
+    } 
+    // 4. お手付き（間違えた場合）：正解するまで同じ色に留まる！
+    else {
+      score = Math.max(0, score - 5);
+      fb.innerText = "❄️ つまずいた! 同じ色を押してね! (-5)";
+      fb.style.color = "#dc2626";
+      document.getElementById('current-score').innerText = score;
+      // nextQuestion() は呼ばずにそのまま留まる
+    }
   }
 
   function endGame() {
@@ -432,6 +497,14 @@
 
     document.getElementById('res-name').innerText = playerName;
     document.getElementById('final-score').innerText = score + " 点";
+
+    // くまさん出現案内の表示切り替え
+    const bearMsg = document.getElementById('bear-found-msg');
+    if (foundBear) {
+      bearMsg.classList.remove('hidden');
+    } else {
+      bearMsg.classList.add('hidden');
+    }
 
     // 獲得称号の決定
     const titleBox = document.getElementById('player-title');
@@ -449,6 +522,15 @@
     btn.style.display = "block";
     btn.disabled = false;
     document.getElementById('send-status').innerText = "";
+
+    // 誤連打でスタート画面に戻るのを防ぐため、リセットボタンを一時無効化（1秒間）
+    const resetBtn = document.getElementById('reset-btn');
+    resetBtn.disabled = true;
+    resetBtn.style.opacity = "0.5";
+    setTimeout(() => {
+      resetBtn.disabled = false;
+      resetBtn.style.opacity = "2500";
+    }, 1000);
   }
 
   function sendScore() {
