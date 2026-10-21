@@ -163,20 +163,26 @@
       justify-content: center;
     }
 
-    /* ★ 結果画面のくまさんサイズを倍（160px）にアップ */
+    /* 結果画面のくまさんサイズ（160px） */
     .bear-badge-icon {
       width: 160px;
       height: 160px;
       margin-bottom: 8px;
     }
 
-    /* ★ 背景透過されてない画像用の枠・角丸調整 */
-    .bear-img-styled {
+    /* 画像用スタイル（背景になじむ設定） */
+    .bear-img-game {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    .bear-img-result {
       width: 100%;
       height: 100%;
       object-fit: contain;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     /* 虹色グラアニメーション */
@@ -361,12 +367,12 @@
           </svg>`
   };
 
-  // ★ ゲーム画面用のくまさん画像（bear_game.jpg）
+  // ★ 新しいくまさん画像（bear_game.png）
   const bearColor = {
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
     colorCode: '#d97706',
-    svg: `<img src="bear_game.jpg" alt="くまさん" class="bear-img-styled">`
+    svg: `<img src="bear_game.png" alt="くまさん" class="bear-img-game">`
   };
 
   function toggleCustomInput() {
@@ -493,12 +499,12 @@
     document.getElementById('res-name').innerText = playerName;
     document.getElementById('final-score').innerText = score + " 点";
 
-    // ★ 結果画面用のくまさん表示＆画像指定（bear_result.jpg）
+    // ★ 結果画面用のくまさん表示＆画像指定（bear_result.jpg または bear_result.png）
     const bearMsg = document.getElementById('bear-found-msg');
     const bearIconBox = document.getElementById('bear-badge-icon-box');
 
     if (foundBear) {
-      bearIconBox.innerHTML = `<img src="bear_result.jpg" alt="結果用くまさん" class="bear-img-styled">`;
+      bearIconBox.innerHTML = `<img src="bear_result.jpg" alt="結果用くまさん" class="bear-img-result">`;
       bearMsg.classList.remove('hidden');
     } else {
       bearMsg.classList.add('hidden');
