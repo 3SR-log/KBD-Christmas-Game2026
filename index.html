@@ -165,12 +165,19 @@
 
     /* プレゼント画像のスタイル */
     #target-present-icon {
-      width: 85px;
-      height: 85px;
+      width: 100px;
+      height: 100px;
       margin-bottom: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+
+    .present-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
     }
 
     #target-label {
@@ -233,14 +240,6 @@
       width: 160px;
       height: 160px;
       margin-bottom: 8px;
-    }
-
-    /* 画像用スタイル */
-    .bear-img-game {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
     }
 
     .bear-img-result {
@@ -309,7 +308,7 @@
       <div id="judge-maru" class="judge-overlay judge-maru">⭕</div>
       <div id="judge-batsu" class="judge-overlay judge-batsu">❌</div>
 
-      <!-- 色・画像が動的に差し替わるエリア -->
+      <!-- 画像が動的に差し替わるエリア -->
       <div id="target-present-icon"></div>
       <div id="target-label">あか</div>
     </div>
@@ -367,108 +366,58 @@
   let blackTimerId = null;
   let judgeTimerId = null;
 
-  // 各色のSVG画像データ
+  // 🖼️ 各色の画像指定（画像ファイル名をここに設定）
   const colors = [
     { 
       id: 'red', 
       name: 'あか', 
       colorCode: '#ef4444',
-      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-              <rect x="15" y="35" width="70" height="50" fill="#ef4444" rx="5"/>
-              <rect x="10" y="25" width="80" height="15" fill="#dc2626" rx="3"/>
-              <rect x="42" y="25" width="16" height="60" fill="#facc15"/>
-              <rect x="15" y="52" width="70" height="16" fill="#facc15"/>
-              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#facc15"/>
-              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#facc15"/>
-            </svg>`
+      imgSrc: 'red.png'
     },
     { 
       id: 'green', 
       name: 'みどり', 
       colorCode: '#22c55e',
-      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-              <rect x="15" y="35" width="70" height="50" fill="#22c55e" rx="5"/>
-              <rect x="10" y="25" width="80" height="15" fill="#16a34a" rx="3"/>
-              <rect x="42" y="25" width="16" height="60" fill="#ef4444"/>
-              <rect x="15" y="52" width="70" height="16" fill="#ef4444"/>
-              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ef4444"/>
-              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ef4444"/>
-            </svg>`
+      imgSrc: 'green.png'
     },
     { 
       id: 'blue', 
       name: 'あお', 
       colorCode: '#3b82f6',
-      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-              <rect x="15" y="35" width="70" height="50" fill="#3b82f6" rx="5"/>
-              <rect x="10" y="25" width="80" height="15" fill="#2563eb" rx="3"/>
-              <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
-              <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
-              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
-              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
-            </svg>`
+      imgSrc: 'blue.png'
     }
   ];
 
-  // 虹色プレミアムBOX用データ
+  // 🌟 虹色プレミアムBOX用画像データ
   const rainbowColor = {
     id: 'rainbow',
     name: '🌟 プレミアム 🌟',
     colorCode: '#facc15',
-    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-            <defs>
-              <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ff4d4d"/>
-                <stop offset="33%" stop-color="#facc15"/>
-                <stop offset="66%" stop-color="#22c55e"/>
-                <stop offset="100%" stop-color="#3b82f6"/>
-              </linearGradient>
-            </defs>
-            <rect x="15" y="35" width="70" height="50" fill="url(#rainbowGrad)" rx="5"/>
-            <rect x="10" y="25" width="80" height="15" fill="url(#rainbowGrad)" rx="3"/>
-            <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
-            <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
-            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
-            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
-          </svg>`
+    imgSrc: 'rainbow.png'
   };
 
-  // くまさん画像
+  // 🧸 くまさん画像データ
   const bearColor = {
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
     colorCode: '#d97706',
-    svg: `<img src="bear_game.png" alt="くまさん" class="bear-img-game">`
+    imgSrc: 'bear_game.png'
   };
 
-  // 💣 ブラックプレゼント用データ
+  // 💣 ブラックプレゼント用画像データ
   const blackColor = {
     id: 'black',
     name: '💣 押すな危険！ 💣',
     colorCode: '#94a3b8',
-    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-            <rect x="15" y="35" width="70" height="50" fill="#1e293b" rx="5"/>
-            <rect x="10" y="25" width="80" height="15" fill="#0f172a" rx="3"/>
-            <rect x="42" y="25" width="16" height="60" fill="#ef4444"/>
-            <rect x="15" y="52" width="70" height="16" fill="#ef4444"/>
-            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ef4444"/>
-            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ef4444"/>
-          </svg>`
+    imgSrc: 'black.png'
   };
 
-  // ✨ ゴールドプレゼントデータ
+  // ✨ ゴールドプレゼント画像データ
   const goldColor = {
     id: 'gold',
     name: '✨ GOLDEN ✨',
     colorCode: '#eab308',
-    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-            <rect x="15" y="35" width="70" height="50" fill="#eab308" rx="5"/>
-            <rect x="10" y="25" width="80" height="15" fill="#ca8a04" rx="3"/>
-            <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
-            <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
-            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
-            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
-          </svg>`
+    imgSrc: 'gold.png'
   };
 
   function toggleCustomInput() {
@@ -542,13 +491,16 @@
 
     const targetEl = isCorrect ? maru : batsu;
     
-    // アニメーションのリセットのためにわずかな遅延
     requestAnimationFrame(() => {
       targetEl.classList.add('show');
       judgeTimerId = setTimeout(() => {
         targetEl.classList.remove('show');
       }, 250);
     });
+  }
+
+  function renderPresentImage(imgSrc, altText) {
+    return `<img src="${imgSrc}" alt="${altText}" class="present-img">`;
   }
 
   function nextQuestion() {
@@ -571,8 +523,8 @@
 
     currentTargetColor = selectedObj.id;
 
-    // アイコン/画像の更新
-    document.getElementById('target-present-icon').innerHTML = selectedObj.svg;
+    // 画像の更新
+    document.getElementById('target-present-icon').innerHTML = renderPresentImage(selectedObj.imgSrc, selectedObj.name);
 
     // 下の文字ラベルの更新
     const label = document.getElementById('target-label');
@@ -583,7 +535,7 @@
     if (currentTargetColor === 'black') {
       blackTimerId = setTimeout(() => {
         currentTargetColor = 'gold';
-        document.getElementById('target-present-icon').innerHTML = goldColor.svg;
+        document.getElementById('target-present-icon').innerHTML = renderPresentImage(goldColor.imgSrc, goldColor.name);
         label.innerText = goldColor.name;
         label.style.color = goldColor.colorCode;
       }, 1000);
