@@ -338,29 +338,50 @@
           </svg>`
   };
 
-  // 超激レアくまさん（1%の確率）
+  // 超激レアサンタくまさん（画像のイラストをそのまま再現）
   const bearColor = {
     id: 'bear',
-    name: '🧸 奇跡のくまさん 🧸',
-    colorCode: '#f59e0b',
+    name: '🧸 奇跡のサンタくま 🧸',
+    colorCode: '#d97706',
     svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
             <!-- 耳 -->
-            <circle cx="28" cy="28" r="14" fill="#b45309" />
-            <circle cx="28" cy="28" r="8" fill="#fef3c7" />
-            <circle cx="72" cy="28" r="14" fill="#b45309" />
-            <circle cx="72" cy="28" r="8" fill="#fef3c7" />
-            <!-- 顔 -->
-            <circle cx="50" cy="52" r="32" fill="#d97706" />
-            <!-- 口元 -->
-            <ellipse cx="50" cy="60" rx="14" ry="10" fill="#fef3c7" />
-            <ellipse cx="50" cy="55" rx="5" ry="3.5" fill="#78350f" />
-            <!-- 目 -->
-            <circle cx="38" cy="46" r="4" fill="#451a03" />
-            <circle cx="62" cy="46" r="4" fill="#451a03" />
-            <!-- サンタ帽子 -->
-            <path d="M 32 30 Q 50 5, 68 30 Z" fill="#dc2626" />
-            <circle cx="50" cy="12" r="6" fill="#ffffff" />
-            <rect x="30" y="27" width="40" height="6" fill="#ffffff" rx="3" />
+            <circle cx="30" cy="32" r="11" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
+            <circle cx="30" cy="32" r="6" fill="#d99b6c"/>
+            <circle cx="70" cy="32" r="11" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
+            <!-- サンタ帽子（後ろ側・ポンポン） -->
+            <circle cx="72" cy="22" r="6" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <!-- 体（サンタ服） -->
+            <path d="M 28 55 Q 18 85 30 88 Q 50 92 70 88 Q 82 85 72 55 Z" fill="#c0392b" stroke="#3d1e0b" stroke-width="2.5"/>
+            <!-- 裾のもこもこフチ -->
+            <path d="M 26 82 Q 50 92 74 82 Q 76 87 70 88 Q 50 92 30 88 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <!-- 足 -->
+            <ellipse cx="36" cy="86" rx="9" ry="6" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
+            <ellipse cx="64" cy="86" rx="9" ry="6" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
+            <!-- 襟のもこもこ -->
+            <path d="M 28 58 Q 50 66 72 58 Q 74 64 50 68 Q 26 64 28 58 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <!-- 頭（顔） -->
+            <ellipse cx="50" cy="48" rx="23" ry="20" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
+            <!-- 口元（鼻まわり） -->
+            <ellipse cx="50" cy="53" rx="8" ry="6" fill="#d99b6c"/>
+            <ellipse cx="50" cy="50" rx="3" ry="2.5" fill="#3d1e0b"/>
+            <path d="M 50 52.5 L 50 55.5" stroke="#3d1e0b" stroke-width="2"/>
+            <!-- つぶらな目 -->
+            <circle cx="41" cy="47" r="2.5" fill="#3d1e0b"/>
+            <circle cx="59" cy="47" r="2.5" fill="#3d1e0b"/>
+            <!-- サンタ帽子（赤い部分＋フチ） -->
+            <path d="M 31 38 Q 50 20 68 35 Q 60 28 40 32 Z" fill="#c0392b" stroke="#3d1e0b" stroke-width="2"/>
+            <path d="M 30 38 Q 50 32 70 37 Q 68 42 50 38 Q 32 42 30 38 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <!-- 抱えている緑のプレゼントBOX -->
+            <rect x="42" y="62" width="16" height="14" fill="#27ae60" stroke="#3d1e0b" stroke-width="2" rx="2"/>
+            <rect x="48" y="62" width="4" height="14" fill="#c0392b"/>
+            <rect x="42" y="67" width="16" height="4" fill="#c0392b"/>
+            <!-- リボン結び目 -->
+            <circle cx="50" cy="61" r="2" fill="#e74c3c"/>
+            <!-- 手（袖のもこもこ＋茶色の手） -->
+            <circle cx="34" cy="66" r="4.5" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <circle cx="38" cy="66" r="3.5" fill="#8c512d" stroke="#3d1e0b" stroke-width="2"/>
+            <circle cx="66" cy="66" r="4.5" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
+            <circle cx="62" cy="66" r="3.5" fill="#8c512d" stroke="#3d1e0b" stroke-width="2"/>
           </svg>`
   };
 
@@ -415,21 +436,13 @@
     }, 1000);
   }
 
-  function nextQuestion() {
-    const rand = Math.random();
-    let selectedObj;
-
-    // 1%の確率でくまさん、7%の確率でレインボー
-    if (rand < 0.01) {
-      selectedObj = bearColor;
-      foundBear = true;
-    } else if (rand < 0.08) { // 0.01 + 0.07 = 0.08
-      selectedObj = rainbowColor;
-    } else {
-      selectedObj = colors[Math.floor(Math.random() * colors.length)];
-    }
+  ffunction nextQuestion() {
+    // ★ テスト用：常にくまさんを選択（100%）
+    let selectedObj = bearColor;
+    foundBear = true;
 
     currentTargetColor = selectedObj.id;
+    // （以下略）
 
     // プレゼントアイコン（SVG）の更新
     document.getElementById('target-present-icon').innerHTML = selectedObj.svg;
@@ -523,14 +536,14 @@
     btn.disabled = false;
     document.getElementById('send-status').innerText = "";
 
-    // 誤連打でスタート画面に戻るのを防ぐため、リセットボタンを一時無効化（1秒間）
+    // 誤連打でスタート画面に戻るのを防ぐため、リセットボタンを一時無効化（2.5秒間）
     const resetBtn = document.getElementById('reset-btn');
     resetBtn.disabled = true;
     resetBtn.style.opacity = "0.5";
     setTimeout(() => {
       resetBtn.disabled = false;
-      resetBtn.style.opacity = "2500";
-    }, 1000);
+      resetBtn.style.opacity = "1";
+    }, 2500); // ★ 2.5秒に変更しました
   }
 
   function sendScore() {
