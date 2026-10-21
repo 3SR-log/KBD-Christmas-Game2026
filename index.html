@@ -79,6 +79,9 @@
       width: 95px;
       height: 95px;
       margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     #target-label {
@@ -144,17 +147,26 @@
     .info-text { font-size: 14px; color: #475569; }
     .timer-text { font-size: 22px; color: #dc2626; font-weight: bold; }
 
-    /* くまさん発見案内バッジ */
+    /* くまさん発見案内バッジ（結果画面用） */
     .bear-badge {
       background: #fef3c7;
       color: #b45309;
       border: 2px dashed #f59e0b;
-      padding: 8px;
+      padding: 10px;
       border-radius: 12px;
       font-weight: bold;
       font-size: 14px;
       margin: 8px 0;
-      display: inline-block;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bear-badge-icon {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 5px;
     }
 
     /* 虹色グラアニメーション */
@@ -215,7 +227,7 @@
     <div class="feedback" id="feedback"></div>
 
     <div id="play-area">
-      <!-- 色ごとに動的に差し替わるSVGプレゼント画像 -->
+      <!-- 色・画像が動的に差し替わるエリア -->
       <div id="target-present-icon"></div>
       <div id="target-label">あか</div>
     </div>
@@ -245,9 +257,10 @@
     
     <div class="score-display" id="final-score">0 点</div>
 
-    <!-- くまさん遭遇メッセージ -->
+    <!-- くまさん遭遇メッセージ（結果画面専用イラスト） -->
     <div id="bear-found-msg" class="bear-badge hidden">
-      🧸 超激レア「くまさん」が出現しました！<br>スクショしてみんなに見せてね！📸
+      <div id="bear-badge-icon-box" class="bear-badge-icon"></div>
+      <div>超激レア「サンタくま」が出現しました！<br>スクショしてみんなに見せてね！📸</div>
     </div>
 
     <!-- 自動送信ボタン -->
@@ -272,7 +285,7 @@
   let questionStartTime = 0;
   let foundBear = false; // くまさん遭遇フラグ
 
-  // 各色のSVG画像データ（通常色＋レインボー＋くまさん）
+  // 各色のSVG画像データ
   const colors = [
     { 
       id: 'red', 
@@ -338,51 +351,12 @@
           </svg>`
   };
 
-  // 超激レアサンタくまさん（画像のイラストをそのまま再現）
+  // ★ ゲーム画面用のくまさん画像（bear_game.jpg）
   const bearColor = {
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
     colorCode: '#d97706',
-    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
-            <!-- 耳 -->
-            <circle cx="30" cy="32" r="11" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
-            <circle cx="30" cy="32" r="6" fill="#d99b6c"/>
-            <circle cx="70" cy="32" r="11" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
-            <!-- サンタ帽子（後ろ側・ポンポン） -->
-            <circle cx="72" cy="22" r="6" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <!-- 体（サンタ服） -->
-            <path d="M 28 55 Q 18 85 30 88 Q 50 92 70 88 Q 82 85 72 55 Z" fill="#c0392b" stroke="#3d1e0b" stroke-width="2.5"/>
-            <!-- 裾のもこもこフチ -->
-            <path d="M 26 82 Q 50 92 74 82 Q 76 87 70 88 Q 50 92 30 88 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <!-- 足 -->
-            <ellipse cx="36" cy="86" rx="9" ry="6" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
-            <ellipse cx="64" cy="86" rx="9" ry="6" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
-            <!-- 襟のもこもこ -->
-            <path d="M 28 58 Q 50 66 72 58 Q 74 64 50 68 Q 26 64 28 58 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <!-- 頭（顔） -->
-            <ellipse cx="50" cy="48" rx="23" ry="20" fill="#8c512d" stroke="#3d1e0b" stroke-width="2.5"/>
-            <!-- 口元（鼻まわり） -->
-            <ellipse cx="50" cy="53" rx="8" ry="6" fill="#d99b6c"/>
-            <ellipse cx="50" cy="50" rx="3" ry="2.5" fill="#3d1e0b"/>
-            <path d="M 50 52.5 L 50 55.5" stroke="#3d1e0b" stroke-width="2"/>
-            <!-- つぶらな目 -->
-            <circle cx="41" cy="47" r="2.5" fill="#3d1e0b"/>
-            <circle cx="59" cy="47" r="2.5" fill="#3d1e0b"/>
-            <!-- サンタ帽子（赤い部分＋フチ） -->
-            <path d="M 31 38 Q 50 20 68 35 Q 60 28 40 32 Z" fill="#c0392b" stroke="#3d1e0b" stroke-width="2"/>
-            <path d="M 30 38 Q 50 32 70 37 Q 68 42 50 38 Q 32 42 30 38 Z" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <!-- 抱えている緑のプレゼントBOX -->
-            <rect x="42" y="62" width="16" height="14" fill="#27ae60" stroke="#3d1e0b" stroke-width="2" rx="2"/>
-            <rect x="48" y="62" width="4" height="14" fill="#c0392b"/>
-            <rect x="42" y="67" width="16" height="4" fill="#c0392b"/>
-            <!-- リボン結び目 -->
-            <circle cx="50" cy="61" r="2" fill="#e74c3c"/>
-            <!-- 手（袖のもこもこ＋茶色の手） -->
-            <circle cx="34" cy="66" r="4.5" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <circle cx="38" cy="66" r="3.5" fill="#8c512d" stroke="#3d1e0b" stroke-width="2"/>
-            <circle cx="66" cy="66" r="4.5" fill="#ffffff" stroke="#3d1e0b" stroke-width="2"/>
-            <circle cx="62" cy="66" r="3.5" fill="#8c512d" stroke="#3d1e0b" stroke-width="2"/>
-          </svg>`
+    svg: `<img src="bear_game.jpg" alt="くまさん" style="width: 100%; height: 100%; object-fit: contain;">`
   };
 
   function toggleCustomInput() {
@@ -437,13 +411,13 @@
   }
 
   function nextQuestion() {
-    // ★ テスト用：常にくまさんを選択（100%）
+    // 🧪 テスト用：常にくまさんを選択（100%出現）
     let selectedObj = bearColor;
     foundBear = true;
 
     currentTargetColor = selectedObj.id;
 
-    // プレゼントアイコン（SVG）の更新
+    // アイコン/画像の更新
     document.getElementById('target-present-icon').innerHTML = selectedObj.svg;
 
     // 下の文字ラベルの更新
@@ -491,15 +465,14 @@
       }
 
       document.getElementById('current-score').innerText = score;
-      nextQuestion(); // 正解した時だけ次の問題へ！
+      nextQuestion();
     } 
-    // 4. お手付き（間違えた場合）：正解するまで同じ色に留まる！
+    // 4. お手付き（間違えた場合）
     else {
       score = Math.max(0, score - 5);
       fb.innerText = "❄️ つまずいた! 同じ色を押してね! (-5)";
       fb.style.color = "#dc2626";
       document.getElementById('current-score').innerText = score;
-      // nextQuestion() は呼ばずにそのまま留まる
     }
   }
 
@@ -510,9 +483,12 @@
     document.getElementById('res-name').innerText = playerName;
     document.getElementById('final-score').innerText = score + " 点";
 
-    // くまさん出現案内の表示切り替え
+    // ★ 結果画面用のくまさん表示＆画像指定（bear_result.jpg）
     const bearMsg = document.getElementById('bear-found-msg');
+    const bearIconBox = document.getElementById('bear-badge-icon-box');
+
     if (foundBear) {
+      bearIconBox.innerHTML = `<img src="bear_result.jpg" alt="結果用くまさん" style="width: 100%; height: 100%; object-fit: contain;">`;
       bearMsg.classList.remove('hidden');
     } else {
       bearMsg.classList.add('hidden');
@@ -535,7 +511,7 @@
     btn.disabled = false;
     document.getElementById('send-status').innerText = "";
 
-    // 誤連打でスタート画面に戻るのを防ぐため、リセットボタンを一時無効化（2.5秒間）
+    // リセットボタンを2.5秒間無効化（誤タップ防止）
     const resetBtn = document.getElementById('reset-btn');
     resetBtn.disabled = true;
     resetBtn.style.opacity = "0.5";
