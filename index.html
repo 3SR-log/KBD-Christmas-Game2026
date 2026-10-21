@@ -152,7 +152,7 @@
       background: #fef3c7;
       color: #b45309;
       border: 2px dashed #f59e0b;
-      padding: 10px;
+      padding: 12px;
       border-radius: 12px;
       font-weight: bold;
       font-size: 14px;
@@ -163,10 +163,20 @@
       justify-content: center;
     }
 
+    /* ★ 結果画面のくまさんサイズを倍（160px）にアップ */
     .bear-badge-icon {
-      width: 80px;
-      height: 80px;
-      margin-bottom: 5px;
+      width: 160px;
+      height: 160px;
+      margin-bottom: 8px;
+    }
+
+    /* ★ 背景透過されてない画像用の枠・角丸調整 */
+    .bear-img-styled {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     }
 
     /* 虹色グラアニメーション */
@@ -356,7 +366,7 @@
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
     colorCode: '#d97706',
-    svg: `<img src="bear_game.jpg" alt="くまさん" style="width: 100%; height: 100%; object-fit: contain;">`
+    svg: `<img src="bear_game.jpg" alt="くまさん" class="bear-img-styled">`
   };
 
   function toggleCustomInput() {
@@ -488,7 +498,7 @@
     const bearIconBox = document.getElementById('bear-badge-icon-box');
 
     if (foundBear) {
-      bearIconBox.innerHTML = `<img src="bear_result.jpg" alt="結果用くまさん" style="width: 100%; height: 100%; object-fit: contain;">`;
+      bearIconBox.innerHTML = `<img src="bear_result.jpg" alt="結果用くまさん" class="bear-img-styled">`;
       bearMsg.classList.remove('hidden');
     } else {
       bearMsg.classList.add('hidden');
