@@ -15,7 +15,7 @@
       touch-action: manipulation;
     }
     
-    /* 画面の完全スクロール固定＆中央揃えの強化 */
+    /* 画面の完全スクロール固定＆中央揃え */
     html, body {
       position: fixed;
       top: 0;
@@ -148,13 +148,14 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* 凹む立体3大ボタンのスタイル */
+    /* 触感（押し込み感）を大幅強化した3大ボタンのスタイル */
     .button-group {
       display: flex;
       gap: 10px;
       justify-content: space-between;
       width: 100%;
       margin-top: 10px;
+      padding-bottom: 6px; /* 凹んだ時のマージン確保 */
     }
     .color-btn {
       flex: 1;
@@ -170,35 +171,35 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      transition: all 0.05s ease;
+      transition: transform 0.04s ease-out, box-shadow 0.04s ease-out;
     }
 
-    /* 各色の立体影（通常時） */
+    /* 各色の立体厚底影（通常時） */
     .btn-red { 
       background: #ef4444; 
-      box-shadow: 0 6px 0 #b91c1c, 0 8px 12px rgba(0,0,0,0.2); 
+      box-shadow: 0 8px 0 #b91c1c, 0 10px 14px rgba(0,0,0,0.25); 
     }
     .btn-green { 
       background: #16a34a; 
-      box-shadow: 0 6px 0 #15803d, 0 8px 12px rgba(0,0,0,0.2); 
+      box-shadow: 0 8px 0 #15803d, 0 10px 14px rgba(0,0,0,0.25); 
     }
     .btn-blue { 
       background: #2563eb; 
-      box-shadow: 0 6px 0 #1d4ed8, 0 8px 12px rgba(0,0,0,0.2); 
+      box-shadow: 0 8px 0 #1d4ed8, 0 10px 14px rgba(0,0,0,0.25); 
     }
 
-    /* ボタンを押した（凹む）アニメーション */
+    /* タップ・押した時の強めの凹みアニメーション */
     .btn-red:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 #b91c1c, 0 3px 6px rgba(0,0,0,0.2);
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #b91c1c, 0 4px 6px rgba(0,0,0,0.2);
     }
     .btn-green:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 #15803d, 0 3px 6px rgba(0,0,0,0.2);
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #15803d, 0 4px 6px rgba(0,0,0,0.2);
     }
     .btn-blue:active {
-      transform: translateY(4px);
-      box-shadow: 0 2px 0 #1d4ed8, 0 3px 6px rgba(0,0,0,0.2);
+      transform: translateY(6px);
+      box-shadow: 0 2px 0 #1d4ed8, 0 4px 6px rgba(0,0,0,0.2);
     }
 
     .hidden { display: none !important; }
