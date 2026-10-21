@@ -14,25 +14,39 @@
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
     }
+    
+    /* 画面の完全スクロール固定（スマホでの揺れ防止） */
+    html, body {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 10px;
+    }
+
     body {
       font-family: sans-serif;
       /* 白銀の雪国グラデーション背景 */
       background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%);
       color: #1e293b;
       text-align: center;
-      margin: 0;
-      padding: 10px;
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
-    h1 { color: #dc2626; font-size: 22px; margin-top: 5px; margin-bottom: 10px; text-shadow: 0 1px 2px #fff; }
+    
+    h1 { color: #dc2626; font-size: 22px; margin-top: 0; margin-bottom: 10px; text-shadow: 0 1px 2px #fff; }
+    
     .card {
       /* 白く透明感のあるスノーカード */
       background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(8px);
       border-radius: 16px;
       padding: 15px;
+      width: 100%;
       max-width: 400px;
-      margin: 0 auto;
       box-shadow: 0 8px 20px rgba(186, 230, 253, 0.6), 0 2px 6px rgba(0,0,0,0.05);
       border: 2px solid #ffffff;
     }
@@ -98,7 +112,7 @@
     #play-area {
       position: relative;
       width: 100%;
-      height: 200px;
+      height: 190px;
       /* 氷の世界のような透明感ある濃紺グラデーション */
       background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
       border-radius: 12px;
@@ -113,8 +127,8 @@
     
     /* プレゼント画像のスタイル */
     #target-present-icon {
-      width: 95px;
-      height: 95px;
+      width: 90px;
+      height: 90px;
       margin-bottom: 2px;
       display: flex;
       align-items: center;
@@ -122,25 +136,25 @@
     }
 
     #target-label {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: bold;
       letter-spacing: 2px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* 指が太くても乾燥していても押しやすい巨大3大ボタン */
+    /* 凹む立体3大ボタンのスタイル */
     .button-group {
       display: flex;
-      gap: 8px;
+      gap: 10px;
       justify-content: space-between;
       width: 100%;
-      margin-top: 5px;
+      margin-top: 10px;
     }
     .color-btn {
       flex: 1;
-      height: 90px;
+      height: 85px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 18px;
       font-weight: bold;
       color: white;
@@ -149,15 +163,37 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+      position: relative;
+      transition: all 0.05s ease;
     }
-    .color-btn:active {
-      transform: translateY(3px);
-      box-shadow: none;
+
+    /* 各色の立体影（通常時） */
+    .btn-red { 
+      background: #ef4444; 
+      box-shadow: 0 6px 0 #b91c1c, 0 8px 12px rgba(0,0,0,0.2); 
     }
-    .btn-red { background: #ef4444; }
-    .btn-green { background: #16a34a; }
-    .btn-blue { background: #2563eb; }
+    .btn-green { 
+      background: #16a34a; 
+      box-shadow: 0 6px 0 #15803d, 0 8px 12px rgba(0,0,0,0.2); 
+    }
+    .btn-blue { 
+      background: #2563eb; 
+      box-shadow: 0 6px 0 #1d4ed8, 0 8px 12px rgba(0,0,0,0.2); 
+    }
+
+    /* ボタンを押した（凹む）アニメーション */
+    .btn-red:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #b91c1c, 0 3px 6px rgba(0,0,0,0.2);
+    }
+    .btn-green:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #15803d, 0 3px 6px rgba(0,0,0,0.2);
+    }
+    .btn-blue:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #1d4ed8, 0 3px 6px rgba(0,0,0,0.2);
+    }
 
     .hidden { display: none !important; }
     .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 10px 0; }
@@ -261,7 +297,7 @@
       <div id="target-label">あか</div>
     </div>
 
-    <!-- 乾燥指・指太対策：巨大3色ボタン -->
+    <!-- 押し込み（凹む）演出付き3色ボタン -->
     <div class="button-group">
       <button class="color-btn btn-red" onclick="checkAnswer('red')">
         <span style="font-size: 24px;">🔴</span>
