@@ -40,7 +40,41 @@
       padding: 10px;
     }
     
-    h1 { color: #dc2626; font-size: 22px; margin-top: 0; margin-bottom: 10px; text-shadow: 0 1px 2px #fff; }
+    /* タップできる隠しタイトルのスタイル */
+    h1 { 
+      color: #dc2626; 
+      font-size: 22px; 
+      margin-top: 0; 
+      margin-bottom: 10px; 
+      text-shadow: 0 1px 2px #fff; 
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.1s ease;
+    }
+    h1:active { transform: scale(0.95); }
+
+    /* ☃️ 雪だるまの隠しメッセージ吹き出し */
+    .snowman-popup {
+      position: absolute;
+      top: 45px;
+      left: 50%;
+      transform: translateX(-50%) scale(0);
+      background: #ffffff;
+      color: #0284c7;
+      border: 2px solid #38bdf8;
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 50;
+      white-space: nowrap;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      pointer-events: none;
+    }
+    .snowman-popup.show {
+      transform: translateX(-50%) scale(1);
+    }
     
     .card {
       /* 白く透明感のあるスノーカード */
@@ -54,6 +88,7 @@
       box-shadow: 0 8px 20px rgba(186, 230, 253, 0.6), 0 2px 6px rgba(0,0,0,0.05);
       border: 2px solid #ffffff;
       position: relative;
+      overflow: hidden;
     }
 
     input[type="text"], select {
@@ -254,7 +289,19 @@
     .btn-blue { background: #2563eb; }
 
     .hidden { display: none !important; }
-    .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 10px 0; }
+    
+    /* スコア表示（タップで紙吹雪が出るように） */
+    .score-display { 
+      font-size: 44px; 
+      color: #d97706; 
+      font-weight: bold; 
+      margin: 10px 0; 
+      cursor: pointer;
+      display: inline-block;
+      transition: transform 0.1s ease;
+    }
+    .score-display:active { transform: scale(1.1); }
+
     .info-text { font-size: 14px; color: #475569; }
 
     /* くまさん発見案内バッジ（結果画面用） */
@@ -286,15 +333,30 @@
       object-fit: contain;
       border-radius: 12px;
     }
+
+    /* ふわふわ落ちる雪・紙吹雪のエフェクト用 */
+    .falling-particle {
+      position: absolute;
+      top: -20px;
+      pointer-events: none;
+      animation: fallDown linear forwards;
+      z-index: 100;
+    }
+    @keyframes fallDown {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(450px) rotate(360deg); opacity: 0; }
+    }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h1>🎁 サンタのプレゼント仕分け 🎅</h1>
+<div class="card" id="main-card">
+  <!-- ☃️ 雪だるまの隠しセリフ吹き出し -->
+  <div id="snowman-msg" class="snowman-popup">☃️ 見つけてくれてありがとう！</div>
 
-  <!-- 1. スタート画面 -->
+  <!-- 1. スタート画面（タイトルタップで隠しイベント発動） -->
   <div id="start-screen">
+    <h1 onclick="triggerSnowmanSecret()">🎁 サンタのプレゼント仕分け 🎅</h1>
     <p class="info-text">出てくるプレゼントと同じ色のボタンを素早く押して</p>
     <p class="info-text">仕分けよう！（制限時間15秒）</p>
     
@@ -365,7 +427,8 @@
     <h2>おつかれさまでした！</h2>
     <p><strong id="res-name"></strong> さんのスコア</p>
     
-    <div class="score-display" id="final-score">0 点</div>
+    <!-- スコア文字（タップすると紙吹雪が舞う！） -->
+    <div class="score-display" id="final-score" onclick="triggerConfetti()">0 点</div>
 
     <!-- くまさん発見案内バッジ（結果画面専用イラスト） -->
     <div id="bear-found-msg" class="bear-badge hidden">
@@ -410,8 +473,8 @@
   let score = 0;
   let remainingTime = GAME_DURATION;
   let timerId = null;
-  let startTimeMs = 0; // 開始時刻（回復計算用）
-  let addedTimeMs = 0; // 回復させた累計ミリ秒
+  let startTimeMs = 0; 
+  let addedTimeMs = 0; 
   let currentTargetColor = "";
   let foundBear = false;
   let blackTimerId = null;
@@ -421,6 +484,7 @@
   let secretHealCount = 0;
   const MAX_SECRET_HEAL = 3;
   let healPopTimer = null;
+  let snowmanTimer = null;
 
   // 🖼️ 各色の画像指定
   const colors = [
@@ -476,6 +540,52 @@
     imgSrc: 'gold.png'
   };
 
+  // ☃️ タイトルタップ時の隠し演出（雪を降らせて雪だるまが喋る）
+  function triggerSnowmanSecret() {
+    const msg = document.getElementById('snowman-msg');
+    if (snowmanTimer) clearTimeout(snowmanTimer);
+    
+    msg.classList.add('show');
+    snowmanTimer = setTimeout(() => {
+      msg.classList.remove('show');
+    }, 2000);
+
+    // キラキラ雪のエフェクトを複数生成
+    const card = document.getElementById('main-card');
+    for (let i = 0; i < 15; i++) {
+      const flake = document.createElement('div');
+      flake.className = 'falling-particle';
+      flake.innerText = Math.random() > 0.5 ? '❄️' : '✨';
+      flake.style.left = Math.random() * 90 + 5 + '%';
+      flake.style.fontSize = (Math.random() * 12 + 12) + 'px';
+      flake.style.animationDuration = (Math.random() * 1 + 1) + 's';
+      card.appendChild(flake);
+
+      setTimeout(() => {
+        flake.remove();
+      }, 2000);
+    }
+  }
+
+  // 🎉 スコアタップ時の紙吹雪演出
+  function triggerConfetti() {
+    const card = document.getElementById('main-card');
+    const confettiSymbols = ['🎉', '✨', '⭐', '🎊', '🎁'];
+    for (let i = 0; i < 20; i++) {
+      const conf = document.createElement('div');
+      conf.className = 'falling-particle';
+      conf.innerText = confettiSymbols[Math.floor(Math.random() * confettiSymbols.length)];
+      conf.style.left = Math.random() * 90 + 5 + '%';
+      conf.style.fontSize = (Math.random() * 16 + 14) + 'px';
+      conf.style.animationDuration = (Math.random() * 1.2 + 0.8) + 's';
+      card.appendChild(conf);
+
+      setTimeout(() => {
+        conf.remove();
+      }, 2000);
+    }
+  }
+
   function toggleCustomInput() {
     const select = document.getElementById('name-select');
     const container = document.getElementById('custom-name-container');
@@ -505,7 +615,7 @@
     score = 0;
     remainingTime = GAME_DURATION;
     foundBear = false;
-    secretHealCount = 0; // 隠し回復回数リセット
+    secretHealCount = 0; 
     addedTimeMs = 0;
 
     document.getElementById('current-score').innerText = score;
@@ -538,13 +648,13 @@
     }, 100);
   }
 
-  // 🤫 秘密のトナカイ回復ギミック（時間を増やす処理）
+  // 🤫 秘密のトナカイ回復ギミック
   function triggerSecretHeal() {
     if (remainingTime <= 0) return;
-    if (secretHealCount >= MAX_SECRET_HEAL) return; // 1ゲーム3回まで
+    if (secretHealCount >= MAX_SECRET_HEAL) return; 
 
     secretHealCount++;
-    addedTimeMs += 2000; // 2000ミリ秒（2秒）ぶん経過時間を巻き戻す
+    addedTimeMs += 2000; 
 
     // トナカイジャンプ演出
     const runner = document.getElementById('reindeer-runner');
@@ -591,7 +701,6 @@
     const rand = Math.random();
     let selectedObj;
 
-    // 1%でくまさん、7%でレインボー、3%でブラックプレゼント
     if (rand < 0.01) {
       selectedObj = bearColor;
       foundBear = true;
@@ -605,15 +714,12 @@
 
     currentTargetColor = selectedObj.id;
 
-    // 画像の更新
     document.getElementById('target-present-icon').innerHTML = renderPresentImage(selectedObj.imgSrc, selectedObj.name);
 
-    // 下の文字ラベルの更新
     const label = document.getElementById('target-label');
     label.innerText = selectedObj.name;
     label.style.color = selectedObj.colorCode;
 
-    // 💣 0.5秒後にゴールドに変化
     if (currentTargetColor === 'black') {
       blackTimerId = setTimeout(() => {
         currentTargetColor = 'gold';
@@ -625,46 +731,40 @@
   }
 
   function checkAnswer(selectedColor) {
-    // 💣 1. ブラック（変化前）を押した場合
     if (currentTargetColor === 'black') {
       if (blackTimerId) clearTimeout(blackTimerId);
       score = Math.max(0, score - 15);
-      showJudgeEffect(false); // ❌ 表示
+      showJudgeEffect(false); 
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // ✨ 2. ゴールド（0.5秒待機後）を押した場合
     else if (currentTargetColor === 'gold') {
       score += 50;
-      showJudgeEffect(true); // ⭕ 表示
+      showJudgeEffect(true); 
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // 🧸 3. くまさんの場合（+100点）
     else if (currentTargetColor === 'bear') {
       score += 100;
-      showJudgeEffect(true); // ⭕ 表示
+      showJudgeEffect(true); 
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // 🌟 4. 虹色の場合（+30点）
     else if (currentTargetColor === 'rainbow') {
       score += 30;
-      showJudgeEffect(true); // ⭕ 表示
+      showJudgeEffect(true); 
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // 5. 通常色で正解した場合
     else if (selectedColor === currentTargetColor) {
       score += 10;
-      showJudgeEffect(true); // ⭕ 表示
+      showJudgeEffect(true); 
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     } 
-    // 6. お手付き（間違えた場合）
     else {
       score = Math.max(0, score - 5);
-      showJudgeEffect(false); // ❌ 表示
+      showJudgeEffect(false); 
       document.getElementById('current-score').innerText = score;
     }
   }
