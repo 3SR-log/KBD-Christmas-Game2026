@@ -58,11 +58,48 @@
       cursor: pointer;
       box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
     }
+
+    /* --- トナカイプログレスバーのCSS --- */
+    .timer-bar-container {
+      position: relative;
+      width: 100%;
+      height: 38px;
+      background: #e2e8f0;
+      border-radius: 20px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      border: 2px solid #cbd5e1;
+    }
+    .timer-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #38bdf8 0%, #0284c7 100%);
+      transition: width 0.1s linear;
+    }
+    .reindeer-runner {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      font-size: 22px;
+      line-height: 1;
+      padding-right: 5px;
+      white-space: nowrap;
+    }
+    .goal-flag {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 20px;
+      z-index: 2;
+    }
+
     #play-area {
       position: relative;
       width: 100%;
       height: 200px;
-      /* 氷の世界のような透明感ある濃紺グラデーション（プレゼントが映える） */
+      /* 氷の世界のような透明感ある濃紺グラデーション */
       background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
       border-radius: 12px;
       margin: 5px 0 10px 0;
@@ -89,15 +126,6 @@
       font-weight: bold;
       letter-spacing: 2px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-    }
-
-    /* リアルタイム判定表示 */
-    .feedback {
-      height: 24px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #0284c7;
-      margin-bottom: 5px;
     }
 
     /* 指が太くても乾燥していても押しやすい巨大3大ボタン */
@@ -134,7 +162,6 @@
     .hidden { display: none !important; }
     .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 10px 0; }
     .info-text { font-size: 14px; color: #475569; }
-    .timer-text { font-size: 22px; color: #dc2626; font-weight: bold; }
 
     /* くまさん発見案内バッジ（結果画面用） */
     .bear-badge {
@@ -214,12 +241,19 @@
 
   <!-- 2. プレイ画面 -->
   <div id="game-screen" class="hidden">
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
-      <div class="timer-text">残り: <span id="timer">15</span> 秒</div>
-      <div class="info-text" style="font-size: 16px; color: #1e293b;">スコア: <strong id="current-score" style="color:#d97706; font-size: 20px;">0</strong> 点</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px; margin-bottom: 5px;">
+      <!-- 残り秒数表示 -->
+      <div class="info-text" style="font-size: 16px; font-weight: bold; color: #dc2626;">残り <span id="timer-sec" style="font-size: 20px;">15</span> 秒</div>
+      <div class="info-text" style="font-size: 16px; color: #1e293b;">スコア: <strong id="current-score" style="color:#d97706; font-size: 22px;">0</strong> 点</div>
     </div>
 
-    <div class="feedback" id="feedback"></div>
+    <!-- トナカイが走るタイマーバー -->
+    <div class="timer-bar-container">
+      <div class="goal-flag">🏠🎄</div>
+      <div id="timer-bar-fill" class="timer-bar-fill">
+        <div class="reindeer-runner">🛷🦌</div>
+      </div>
+    </div>
 
     <div id="play-area">
       <!-- 色・画像が動的に差し替わるエリア -->
@@ -270,14 +304,14 @@
 <script>
   const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzlfEKzsBXn7137ZFocRy0KHACgFTYV73gCxGiojAbNBdoWQoqtkK7UxjcQPyVB6e7hwQ/exec";
 
+  const GAME_DURATION = 15; // 制限時間（秒）
   let playerName = "";
   let score = 0;
-  let timeLeft = 15;
+  let remainingTime = GAME_DURATION;
   let timerId = null;
   let currentTargetColor = "";
-  let questionStartTime = 0;
   let foundBear = false;
-  let blackTimerId = null; // ブラックプレゼント変化用のタイマー
+  let blackTimerId = null;
 
   // 各色のSVG画像データ
   const colors = [
@@ -353,7 +387,7 @@
     svg: `<img src="bear_game.png" alt="くまさん" class="bear-img-game">`
   };
 
-  // 💣 ブラックプレゼント用データ（初期状態）
+  // 💣 ブラックプレゼント用データ
   const blackColor = {
     id: 'black',
     name: '💣 押すな危険！ 💣',
@@ -368,7 +402,7 @@
           </svg>`
   };
 
-  // ✨ 1秒待機後に変化するゴールドプレゼントデータ
+  // ✨ ゴールドプレゼントデータ
   const goldColor = {
     id: 'gold',
     name: '✨ GOLDEN ✨',
@@ -410,12 +444,12 @@
 
     playerName = nameInput;
     score = 0;
-    timeLeft = 15;
+    remainingTime = GAME_DURATION;
     foundBear = false;
 
     document.getElementById('current-score').innerText = score;
-    document.getElementById('timer').innerText = timeLeft;
-    document.getElementById('feedback').innerText = "";
+    document.getElementById('timer-sec').innerText = Math.ceil(remainingTime);
+    document.getElementById('timer-bar-fill').style.width = "100%";
 
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.add('hidden');
@@ -423,16 +457,24 @@
 
     nextQuestion();
 
-    // カウントダウンタイマー開始
+    // 0.1秒ごとにトナカイのバーと秒数テキストをスムーズに更新
+    const startTime = Date.now();
     timerId = setInterval(() => {
-      timeLeft--;
-      document.getElementById('timer').innerText = timeLeft;
-      if (timeLeft <= 0) {
+      const elapsed = (Date.now() - startTime) / 1000;
+      remainingTime = GAME_DURATION - elapsed;
+
+      if (remainingTime <= 0) {
         clearInterval(timerId);
         if (blackTimerId) clearTimeout(blackTimerId);
+        document.getElementById('timer-sec').innerText = "0";
+        document.getElementById('timer-bar-fill').style.width = "0%";
         endGame();
+      } else {
+        document.getElementById('timer-sec').innerText = Math.ceil(remainingTime);
+        const percent = (remainingTime / GAME_DURATION) * 100;
+        document.getElementById('timer-bar-fill').style.width = percent + "%";
       }
-    }, 1000);
+    }, 100);
   }
 
   function nextQuestion() {
@@ -463,9 +505,7 @@
     label.innerText = selectedObj.name;
     label.style.color = selectedObj.colorCode;
 
-    questionStartTime = Date.now();
-
-    // 💣 ブラックプレゼントが出たら★1秒（1000ms）★後にゴールドに変化させる
+    // 💣 1秒後にゴールドに変化
     if (currentTargetColor === 'black') {
       blackTimerId = setTimeout(() => {
         currentTargetColor = 'gold';
@@ -477,65 +517,40 @@
   }
 
   function checkAnswer(selectedColor) {
-    const reactionTime = Date.now() - questionStartTime;
-    const fb = document.getElementById('feedback');
-
-    // 💣 1. ブラック（変化前）を押してしまった場合（トラップ爆発）
+    // 💣 1. ブラック（変化前）を押した場合
     if (currentTargetColor === 'black') {
       if (blackTimerId) clearTimeout(blackTimerId);
       score = Math.max(0, score - 15);
-      fb.innerText = "💣 爆発した! (-15点)";
-      fb.style.color = "#dc2626";
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // ✨ 2. ゴールド（1秒待機後）を押した場合（ボーナス獲得）
+    // ✨ 2. ゴールド（1秒待機後）を押した場合
     else if (currentTargetColor === 'gold') {
       score += 50;
-      fb.innerText = "✨ GOLDEN BONUS +50! ✨";
-      fb.style.color = "#eab308";
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
     // 🧸 3. くまさんの場合（+100点）
     else if (currentTargetColor === 'bear') {
       score += 100;
-      fb.innerText = "🧸 奇跡発生! +100点! 🧸";
-      fb.style.color = "#d97706";
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
     // 🌟 4. 虹色の場合（+30点）
     else if (currentTargetColor === 'rainbow') {
       score += 30;
-      fb.innerText = "🌟 BONUS +30! 🌟";
-      fb.style.color = "#d97706";
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
     // 5. 通常色で正解した場合
     else if (selectedColor === currentTargetColor) {
       score += 10;
-
-      if (reactionTime < 350) {
-        fb.innerText = "⚡ 超神速サンタ!!";
-        fb.style.color = "#dc2626";
-      } else if (reactionTime < 600) {
-        fb.innerText = "🎅 ベテランサンタ!";
-        fb.style.color = "#0284c7";
-      } else {
-        fb.innerText = "🛷 見習いサンタ";
-        fb.style.color = "#16a34a";
-      }
-
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     } 
     // 6. お手付き（間違えた場合）
     else {
       score = Math.max(0, score - 5);
-      fb.innerText = "❄️ つまずいた! 同じ色を押してね! (-5)";
-      fb.style.color = "#dc2626";
       document.getElementById('current-score').innerText = score;
     }
   }
