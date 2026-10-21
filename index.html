@@ -53,7 +53,7 @@
     #play-area {
       position: relative;
       width: 100%;
-      height: 180px;
+      height: 200px;
       background: #090d16;
       border-radius: 10px;
       margin: 10px 0;
@@ -63,13 +63,20 @@
       justify-content: center;
       border: 2px solid #334155;
     }
-    #target-present {
-      font-size: 70px;
+    
+    /* プレゼント画像のスタイル */
+    #target-present-icon {
+      width: 100px;
+      height: 100px;
       margin-bottom: 5px;
+      transition: transform 0.1s ease;
     }
+
     #target-label {
-      font-size: 20px;
+      font-size: 28px;
       font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
     /* 指が太くても乾燥していても押しやすい巨大3大ボタン */
@@ -85,7 +92,7 @@
       height: 90px;
       border: none;
       border-radius: 12px;
-      font-size: 16px;
+      font-size: 18px;
       font-weight: bold;
       color: white;
       cursor: pointer;
@@ -153,7 +160,8 @@
     </div>
 
     <div id="play-area">
-      <div id="target-present">🎁</div>
+      <!-- 色ごとに動的に差し替わるSVGプレゼント画像 -->
+      <div id="target-present-icon"></div>
       <div id="target-label">あか</div>
     </div>
 
@@ -178,7 +186,7 @@
   <div id="result-screen" class="hidden">
     <h2>🎉 おつかれさまでした！</h2>
     <p><strong id="res-name"></strong> さんのスコア</p>
-    <div class="score-display" id="final-score">0 個</div>
+    <div class="score-display" id="final-score">0 点</div>
 
     <!-- 自動送信ボタン -->
     <button id="send-btn" class="btn-main" onclick="sendScore()" style="background: #f59e0b; margin-bottom: 12px; width: 100%;">
@@ -200,10 +208,50 @@
   let timerId = null;
   let currentTargetColor = "";
 
+  // 各色のSVG画像データ（箱の色とリボンの色をそれぞれ最適化）
   const colors = [
-    { id: 'red', name: 'あか', colorCode: '#ef4444' },
-    { id: 'green', name: 'みどり', colorCode: '#22c55e' },
-    { id: 'blue', name: 'あお', colorCode: '#3b82f6' }
+    { 
+      id: 'red', 
+      name: 'あか', 
+      colorCode: '#ef4444',
+      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+              <rect x="15" y="35" width="70" height="50" fill="#ef4444" rx="5"/>
+              <rect x="10" y="25" width="80" height="15" fill="#dc2626" rx="3"/>
+              <!-- 黄色のリボン -->
+              <rect x="42" y="25" width="16" height="60" fill="#facc15"/>
+              <rect x="15" y="52" width="70" height="16" fill="#facc15"/>
+              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#facc15"/>
+              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#facc15"/>
+            </svg>`
+    },
+    { 
+      id: 'green', 
+      name: 'みどり', 
+      colorCode: '#22c55e',
+      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+              <rect x="15" y="35" width="70" height="50" fill="#22c55e" rx="5"/>
+              <rect x="10" y="25" width="80" height="15" fill="#16a34a" rx="3"/>
+              <!-- 赤色のリボン -->
+              <rect x="42" y="25" width="16" height="60" fill="#ef4444"/>
+              <rect x="15" y="52" width="70" height="16" fill="#ef4444"/>
+              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ef4444"/>
+              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ef4444"/>
+            </svg>`
+    },
+    { 
+      id: 'blue', 
+      name: 'あお', 
+      colorCode: '#3b82f6',
+      svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+              <rect x="15" y="35" width="70" height="50" fill="#3b82f6" rx="5"/>
+              <rect x="10" y="25" width="80" height="15" fill="#2563eb" rx="3"/>
+              <!-- 白色のリボン -->
+              <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
+              <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
+              <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
+              <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
+            </svg>`
+    }
   ];
 
   function toggleCustomInput() {
@@ -259,6 +307,10 @@
     const randomObj = colors[Math.floor(Math.random() * colors.length)];
     currentTargetColor = randomObj.id;
 
+    // プレゼントアイコン（SVG）の更新
+    document.getElementById('target-present-icon').innerHTML = randomObj.svg;
+
+    // 下の文字ラベルの更新
     const label = document.getElementById('target-label');
     label.innerText = randomObj.name;
     label.style.color = randomObj.colorCode;
