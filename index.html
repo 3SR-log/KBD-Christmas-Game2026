@@ -557,7 +557,7 @@
         document.getElementById('target-present-icon').innerHTML = renderPresentImage(goldColor.imgSrc, goldColor.name);
         label.innerText = goldColor.name;
         label.style.color = goldColor.colorCode;
-      }, 1000);
+      }, 500);
     }
   }
 
@@ -661,11 +661,11 @@
       })
     })
     .then(() => {
-      status.innerText = "✅ スコアを送信しました！";
+      status.innerText = "スコアを送信しました！";
       btn.style.display = "none";
     })
     .catch(() => {
-      status.innerText = "❌ 送信に失敗しました。もう一度お試しください。";
+      status.innerText = "送信に失敗しました。もう一度お試しください。";
       btn.disabled = false;
     });
   }
