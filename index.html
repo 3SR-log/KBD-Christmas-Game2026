@@ -132,18 +132,7 @@
     .btn-blue { background: #2563eb; }
 
     .hidden { display: none !important; }
-    .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 5px 0; }
-    .title-badge { 
-      font-size: 18px; 
-      color: #0284c7; 
-      background: #e0f2fe; 
-      padding: 6px 14px; 
-      border-radius: 20px; 
-      display: inline-block;
-      margin-bottom: 10px;
-      font-weight: bold;
-      border: 1px solid #bae6fd;
-    }
+    .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 10px 0; }
     .info-text { font-size: 14px; color: #475569; }
     .timer-text { font-size: 22px; color: #dc2626; font-weight: bold; }
 
@@ -170,7 +159,7 @@
       margin-bottom: 8px;
     }
 
-    /* 画像用スタイル（背景になじむ設定） */
+    /* 画像用スタイル */
     .bear-img-game {
       width: 100%;
       height: 100%;
@@ -183,16 +172,6 @@
       height: 100%;
       object-fit: contain;
       border-radius: 12px;
-    }
-
-    /* 虹色グラアニメーション */
-    @keyframes rainbow {
-      0% { stop-color: #ff0000; }
-      20% { stop-color: #ffff00; }
-      40% { stop-color: #00ff00; }
-      60% { stop-color: #00ffff; }
-      80% { stop-color: #ff00ff; }
-      100% { stop-color: #ff0000; }
     }
   </style>
 </head>
@@ -268,8 +247,7 @@
   <!-- 3. 結果画面 -->
   <div id="result-screen" class="hidden">
     <h2>🎉 おつかれさまでした！</h2>
-    <p><strong id="res-name"></strong> さんの獲得称号</p>
-    <div class="title-badge" id="player-title">🏆 時空を越える光のサンタ</div>
+    <p><strong id="res-name"></strong> さんのスコア</p>
     
     <div class="score-display" id="final-score">0 点</div>
 
@@ -290,7 +268,6 @@
 </div>
 
 <script>
-  // ★新しいクリスマス用GASのウェブアプリURLを貼り付けます
   const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzlfEKzsBXn7137ZFocRy0KHACgFTYV73gCxGiojAbNBdoWQoqtkK7UxjcQPyVB6e7hwQ/exec";
 
   let playerName = "";
@@ -299,7 +276,8 @@
   let timerId = null;
   let currentTargetColor = "";
   let questionStartTime = 0;
-  let foundBear = false; // くまさん遭遇フラグ
+  let foundBear = false;
+  let blackTimerId = null; // ブラックプレゼント変化用のタイマー
 
   // 各色のSVG画像データ
   const colors = [
@@ -367,12 +345,42 @@
           </svg>`
   };
 
-  // ★ ゲーム画面用のくまさん画像（bear_game.png）
+  // くまさん画像
   const bearColor = {
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
     colorCode: '#d97706',
     svg: `<img src="bear_game.png" alt="くまさん" class="bear-img-game">`
+  };
+
+  // 💣 ブラックプレゼント用データ（初期状態）
+  const blackColor = {
+    id: 'black',
+    name: '💣 押すな危険！ 💣',
+    colorCode: '#94a3b8',
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+            <rect x="15" y="35" width="70" height="50" fill="#1e293b" rx="5"/>
+            <rect x="10" y="25" width="80" height="15" fill="#0f172a" rx="3"/>
+            <rect x="42" y="25" width="16" height="60" fill="#ef4444"/>
+            <rect x="15" y="52" width="70" height="16" fill="#ef4444"/>
+            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ef4444"/>
+            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ef4444"/>
+          </svg>`
+  };
+
+  // ✨ 1秒待機後に変化するゴールドプレゼントデータ
+  const goldColor = {
+    id: 'gold',
+    name: '✨ GOLDEN ✨',
+    colorCode: '#eab308',
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+            <rect x="15" y="35" width="70" height="50" fill="#eab308" rx="5"/>
+            <rect x="10" y="25" width="80" height="15" fill="#ca8a04" rx="3"/>
+            <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
+            <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
+            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
+            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
+          </svg>`
   };
 
   function toggleCustomInput() {
@@ -421,21 +429,26 @@
       document.getElementById('timer').innerText = timeLeft;
       if (timeLeft <= 0) {
         clearInterval(timerId);
+        if (blackTimerId) clearTimeout(blackTimerId);
         endGame();
       }
     }, 1000);
   }
 
   function nextQuestion() {
+    if (blackTimerId) clearTimeout(blackTimerId);
+
     const rand = Math.random();
     let selectedObj;
 
-    // ★ 本番用：1%の確率でくまさん、7%の確率でレインボー
+    // 1%でくまさん、7%でレインボー、3%でブラックプレゼント
     if (rand < 0.01) {
       selectedObj = bearColor;
       foundBear = true;
     } else if (rand < 0.08) {
       selectedObj = rainbowColor;
+    } else if (rand < 0.11) {
+      selectedObj = blackColor;
     } else {
       selectedObj = colors[Math.floor(Math.random() * colors.length)];
     }
@@ -451,21 +464,48 @@
     label.style.color = selectedObj.colorCode;
 
     questionStartTime = Date.now();
+
+    // 💣 ブラックプレゼントが出たら★1秒（1000ms）★後にゴールドに変化させる
+    if (currentTargetColor === 'black') {
+      blackTimerId = setTimeout(() => {
+        currentTargetColor = 'gold';
+        document.getElementById('target-present-icon').innerHTML = goldColor.svg;
+        label.innerText = goldColor.name;
+        label.style.color = goldColor.colorCode;
+      }, 1000);
+    }
   }
 
   function checkAnswer(selectedColor) {
     const reactionTime = Date.now() - questionStartTime;
     const fb = document.getElementById('feedback');
 
-    // 1. くまさんの場合はどれを押しても+100点＆次の色へ
-    if (currentTargetColor === 'bear') {
+    // 💣 1. ブラック（変化前）を押してしまった場合（トラップ爆発）
+    if (currentTargetColor === 'black') {
+      if (blackTimerId) clearTimeout(blackTimerId);
+      score = Math.max(0, score - 15);
+      fb.innerText = "💣 爆発した! (-15点)";
+      fb.style.color = "#dc2626";
+      document.getElementById('current-score').innerText = score;
+      nextQuestion();
+    }
+    // ✨ 2. ゴールド（1秒待機後）を押した場合（ボーナス獲得）
+    else if (currentTargetColor === 'gold') {
+      score += 50;
+      fb.innerText = "✨ GOLDEN BONUS +50! ✨";
+      fb.style.color = "#eab308";
+      document.getElementById('current-score').innerText = score;
+      nextQuestion();
+    }
+    // 🧸 3. くまさんの場合（+100点）
+    else if (currentTargetColor === 'bear') {
       score += 100;
       fb.innerText = "🧸 奇跡発生! +100点! 🧸";
       fb.style.color = "#d97706";
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // 2. 虹色の場合はどれを押しても+30点＆次の色へ
+    // 🌟 4. 虹色の場合（+30点）
     else if (currentTargetColor === 'rainbow') {
       score += 30;
       fb.innerText = "🌟 BONUS +30! 🌟";
@@ -473,11 +513,10 @@
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // 3. 通常色で正解した場合（次の色へ進む）
+    // 5. 通常色で正解した場合
     else if (selectedColor === currentTargetColor) {
       score += 10;
 
-      // 階級スピード判定
       if (reactionTime < 350) {
         fb.innerText = "⚡ 超神速サンタ!!";
         fb.style.color = "#dc2626";
@@ -492,7 +531,7 @@
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     } 
-    // 4. お手付き（間違えた場合）
+    // 6. お手付き（間違えた場合）
     else {
       score = Math.max(0, score - 5);
       fb.innerText = "❄️ つまずいた! 同じ色を押してね! (-5)";
@@ -502,13 +541,14 @@
   }
 
   function endGame() {
+    if (blackTimerId) clearTimeout(blackTimerId);
+
     document.getElementById('game-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.remove('hidden');
 
     document.getElementById('res-name').innerText = playerName;
     document.getElementById('final-score').innerText = score + " 点";
 
-    // ★ 結果画面用のくまさん表示＆画像指定（bear_result.jpg または bear_result.png）
     const bearMsg = document.getElementById('bear-found-msg');
     const bearIconBox = document.getElementById('bear-badge-icon-box');
 
@@ -519,24 +559,11 @@
       bearMsg.classList.add('hidden');
     }
 
-    // 獲得称号の決定
-    const titleBox = document.getElementById('player-title');
-    if (score >= 150) {
-      titleBox.innerText = "🏆 時空を越える光のサンタ";
-    } else if (score >= 100) {
-      titleBox.innerText = "🎁 プレゼント仕分けマスター";
-    } else if (score >= 60) {
-      titleBox.innerText = "🛷 がんばり屋のトナカイ";
-    } else {
-      titleBox.innerText = "☃️ うっかり雪だるま";
-    }
-
     const btn = document.getElementById('send-btn');
     btn.style.display = "block";
     btn.disabled = false;
     document.getElementById('send-status').innerText = "";
 
-    // リセットボタンを2.5秒間無効化（誤タップ防止）
     const resetBtn = document.getElementById('reset-btn');
     resetBtn.disabled = true;
     resetBtn.style.opacity = "0.5";
