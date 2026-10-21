@@ -80,7 +80,7 @@
       box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
     }
 
-    /* --- トナカイプログレスバーのCSS --- */
+    /* --- トナカイプログレスバーのCSS（隠し回復対応） --- */
     .timer-bar-container {
       position: relative;
       width: 100%;
@@ -90,12 +90,14 @@
       margin-bottom: 10px;
       overflow: hidden;
       border: 2px solid #cbd5e1;
+      cursor: pointer;
     }
     .timer-bar-fill {
       height: 100%;
       width: 100%;
       background: linear-gradient(90deg, #38bdf8 0%, #0284c7 100%);
       transition: width 0.1s linear;
+      position: relative;
     }
     .reindeer-runner {
       position: absolute;
@@ -106,7 +108,43 @@
       line-height: 1;
       padding-right: 5px;
       white-space: nowrap;
+      transition: transform 0.1s ease;
     }
+    
+    /* トナカイを押した時のジャンプアニメーション */
+    .reindeer-jump {
+      animation: reindeerHop 0.3s ease;
+    }
+    @keyframes reindeerHop {
+      0% { transform: translateY(-50%) scale(1); }
+      50% { transform: translateY(-120%) scale(1.3); }
+      100% { transform: translateY(-50%) scale(1); }
+    }
+
+    /* 回復時の「+2秒！」ポップアップ文字 */
+    .heal-pop {
+      position: absolute;
+      top: -25px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.5);
+      color: #16a34a;
+      font-weight: bold;
+      font-size: 16px;
+      background: #fef08a;
+      padding: 2px 8px;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 20;
+      white-space: nowrap;
+    }
+    .heal-pop.show {
+      transform: translateX(-50%) translateY(-10px) scale(1);
+      opacity: 1;
+    }
+
     .goal-flag {
       position: absolute;
       right: 8px;
@@ -114,6 +152,7 @@
       transform: translateY(-50%);
       font-size: 20px;
       z-index: 2;
+      pointer-events: none;
     }
 
     #play-area {
@@ -187,7 +226,7 @@
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
     }
 
-    /* フラットでシンプルな3大ボタン（凹みなし） */
+    /* フラットでシンプルな3大ボタン（絵文字なし） */
     .button-group {
       display: flex;
       gap: 10px;
@@ -205,7 +244,6 @@
       color: white;
       cursor: pointer;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       box-shadow: 0 4px 6px rgba(0,0,0,0.15);
@@ -295,11 +333,12 @@
       <div class="info-text" style="font-size: 16px; color: #1e293b;">スコア: <strong id="current-score" style="color:#d97706; font-size: 22px;">0</strong> 点</div>
     </div>
 
-    <!-- トナカイが走るタイマーバー -->
-    <div class="timer-bar-container">
+    <!-- 🦌 トナカイバー（ここをタップすると隠し回復！最大3回まで） -->
+    <div class="timer-bar-container" onclick="triggerSecretHeal()">
+      <div id="heal-pop" class="heal-pop">+2秒!✨</div>
       <div class="goal-flag">🏠🎄</div>
       <div id="timer-bar-fill" class="timer-bar-fill">
-        <div class="reindeer-runner">🛷🦌</div>
+        <div id="reindeer-runner" class="reindeer-runner">🛷🦌</div>
       </div>
     </div>
 
@@ -313,20 +352,11 @@
       <div id="target-label">あか</div>
     </div>
 
-    <!-- 3色ボタン -->
+    <!-- 3色ボタン（絵文字なし） -->
     <div class="button-group">
-      <button class="color-btn btn-red" onclick="checkAnswer('red')">
-        <span style="font-size: 24px;">🔴</span>
-        <span>あか</span>
-      </button>
-      <button class="color-btn btn-green" onclick="checkAnswer('green')">
-        <span style="font-size: 24px;">🟢</span>
-        <span>みどり</span>
-      </button>
-      <button class="color-btn btn-blue" onclick="checkAnswer('blue')">
-        <span style="font-size: 24px;">🔵</span>
-        <span>あお</span>
-      </button>
+      <button class="color-btn btn-red" onclick="checkAnswer('red')">あか</button>
+      <button class="color-btn btn-green" onclick="checkAnswer('green')">みどり</button>
+      <button class="color-btn btn-blue" onclick="checkAnswer('blue')">あお</button>
     </div>
   </div>
 
@@ -337,7 +367,7 @@
     
     <div class="score-display" id="final-score">0 点</div>
 
-    <!-- くまさん遭遇メッセージ（結果画面専用イラスト） -->
+    <!-- くまさん発見案内バッジ（結果画面専用イラスト） -->
     <div id="bear-found-msg" class="bear-badge hidden">
       <div id="bear-badge-icon-box" class="bear-badge-icon"></div>
       <div>超激レア「サンタくま」が出現しました！<br>スクショしてみんなに見せてね！📸</div>
@@ -384,6 +414,11 @@
   let foundBear = false;
   let blackTimerId = null;
   let judgeTimerId = null;
+
+  // 🤫 隠し回復の回数制限管理
+  let secretHealCount = 0;
+  const MAX_SECRET_HEAL = 3;
+  let healPopTimer = null;
 
   // 🖼️ 各色の画像指定
   const colors = [
@@ -468,6 +503,7 @@
     score = 0;
     remainingTime = GAME_DURATION;
     foundBear = false;
+    secretHealCount = 0; // 隠し回復回数リセット
 
     document.getElementById('current-score').innerText = score;
     document.getElementById('timer-sec').innerText = Math.ceil(remainingTime);
@@ -497,6 +533,30 @@
         document.getElementById('timer-bar-fill').style.width = percent + "%";
       }
     }, 100);
+  }
+
+  // 🤫 秘密のトナカイ回復ギミック
+  function triggerSecretHeal() {
+    if (remainingTime <= 0) return;
+    if (secretHealCount >= MAX_SECRET_HEAL) return; // 1ゲーム3回まで
+
+    secretHealCount++;
+    remainingTime = Math.min(GAME_DURATION, remainingTime + 2.0); // +2秒回復（最大制限時間まで）
+
+    // トナカイジャンプ演出
+    const runner = document.getElementById('reindeer-runner');
+    runner.classList.add('reindeer-jump');
+    setTimeout(() => {
+      runner.classList.remove('reindeer-jump');
+    }, 300);
+
+    // 「+2秒！」ポップアップ表示
+    if (healPopTimer) clearTimeout(healPopTimer);
+    const pop = document.getElementById('heal-pop');
+    pop.classList.add('show');
+    healPopTimer = setTimeout(() => {
+      pop.classList.remove('show');
+    }, 400);
   }
 
   function showJudgeEffect(isCorrect) {
@@ -550,7 +610,7 @@
     label.innerText = selectedObj.name;
     label.style.color = selectedObj.colorCode;
 
-    // 💣 1秒後にゴールドに変化
+    // 💣 0.5秒後にゴールドに変化
     if (currentTargetColor === 'black') {
       blackTimerId = setTimeout(() => {
         currentTargetColor = 'gold';
@@ -570,7 +630,7 @@
       document.getElementById('current-score').innerText = score;
       nextQuestion();
     }
-    // ✨ 2. ゴールド（1秒待機後）を押した場合
+    // ✨ 2. ゴールド（0.5秒待機後）を押した場合
     else if (currentTargetColor === 'gold') {
       score += 50;
       showJudgeEffect(true); // ⭕ 表示
