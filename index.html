@@ -367,7 +367,7 @@
           </svg>`
   };
 
-  // ★ 新しいくまさん画像（bear_game.png）
+  // ★ ゲーム画面用のくまさん画像（bear_game.png）
   const bearColor = {
     id: 'bear',
     name: '🧸 奇跡のサンタくま 🧸',
@@ -427,9 +427,18 @@
   }
 
   function nextQuestion() {
-    // 🧪 テスト用：常にくまさんを選択（100%出現）
-    let selectedObj = bearColor;
-    foundBear = true;
+    const rand = Math.random();
+    let selectedObj;
+
+    // ★ 本番用：1%の確率でくまさん、7%の確率でレインボー
+    if (rand < 0.01) {
+      selectedObj = bearColor;
+      foundBear = true;
+    } else if (rand < 0.08) {
+      selectedObj = rainbowColor;
+    } else {
+      selectedObj = colors[Math.floor(Math.random() * colors.length)];
+    }
 
     currentTargetColor = selectedObj.id;
 
