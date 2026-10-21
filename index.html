@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🎁 サンタのプレゼント仕分け！</title>
+  <style>
+    /* 誤作動（拡大・長押しコピー・ハイライト）を完全にブロックするCSS */
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    body {
+      font-family: sans-serif;
+      background-color: #0f172a;
+      color: #fff;
+      text-align: center;
+      margin: 0;
+      padding: 10px;
+    }
+    h1 { color: #ff4d4d; font-size: 22px; margin-top: 5px; margin-bottom: 10px; }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      padding: 15px;
+      max-width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    }
+    input[type="text"] {
+      width: 85%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    button.btn-main {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+    #play-area {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      background: #090d16;
+      border-radius: 10px;
+      margin: 10px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #334155;
+    }
+    #target-present {
+      font-size: 70px;
+      margin-bottom: 5px;
+    }
+    #target-label {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    /* 指が太くても乾燥していても押しやすい巨大3大ボタン */
+    .button-group {
+      display: flex;
+      gap: 8px;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 10px;
+    }
+    .color-btn {
+      flex: 1;
+      height: 90px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    }
+    .color-btn:active {
+      transform: translateY(3px);
+      box-shadow: none;
+    }
+    .btn-red { background: #ef4444; }
+    .btn-green { background: #22c55e; }
+    .btn-blue { background: #3b82f6; }
+
+    .hidden { display: none !important; }
+    .score-display { font-size: 48px; color: #fef08a; font-weight: bold; margin: 10px 0; }
+    .info-text { font-size: 14px; color: #cbd5e1; }
+    .timer-text { font-size: 22px; color: #f59e0b; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🎁 サンタのプレゼント仕分け！ 🎅</h1>
+
+  <!-- 1. スタート画面 -->
+  <div id="start-screen">
+    <p class="info-text">出てくるプレゼントと同じ色のボタンを素早く押して仕分けよう！（制限時間15秒）</p>
+    
+    <p class="info-text" style="font-size: 12px; margin-bottom: 5px;">お名前を選んでね</p>
+
+    <select id="name-select" onchange="toggleCustomInput()" style="width: 85%; padding: 10px; font-size: 16px; border-radius: 6px; border: none; margin-bottom: 10px; text-align: center; background: #fff; color: #333;">
+      <option value="">-- 名前を選択してください --</option>
+      <option value="KK">KK</option>
+      <option value="JJ">JJ</option>
+      <option value="トミー">トミー</option>
+      <option value="ジュリー">ジュリー</option>
+      <option value="ロッキー">ロッキー</option>
+      <option value="シュート">シュート</option>
+      <option value="ダッツ">ダッツ</option>
+      <option value="アッキー">アッキー</option>
+      <option value="美名先生">美名先生</option>
+      <option value="チサちゃん">チサちゃん</option>
+      <option value="ナオちゃん">ナオちゃん</option>
+      <option value="ミソラ">ミソラ</option>
+      <option value="OTHER">✨ その他（直接入力）</option>
+    </select>
+
+    <div id="custom-name-container" class="hidden">
+      <input type="text" id="custom-username" placeholder="名前を直接入力" style="margin-bottom: 10px;" />
+    </div>
+
+    <br>
+    <button class="btn-main" onclick="startGame()">ゲームスタート！</button>
+  </div>
+
+  <!-- 2. プレイ画面 -->
+  <div id="game-screen" class="hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
+      <div class="timer-text">残り: <span id="timer">15</span> 秒</div>
+      <div class="info-text" style="font-size: 16px;">スコア: <strong id="current-score" style="color:#fef08a; font-size: 20px;">0</strong> 点</div>
+    </div>
+
+    <div id="play-area">
+      <div id="target-present">🎁</div>
+      <div id="target-label">あか</div>
+    </div>
+
+    <!-- 乾燥指・指太対策：巨大3色ボタン -->
+    <div class="button-group">
+      <button class="color-btn btn-red" onclick="checkAnswer('red')">
+        <span style="font-size: 24px;">🔴</span>
+        <span>あか</span>
+      </button>
+      <button class="color-btn btn-green" onclick="checkAnswer('green')">
+        <span style="font-size: 24px;">🟢</span>
+        <span>みどり</span>
+      </button>
+      <button class="color-btn btn-blue" onclick="checkAnswer('blue')">
+        <span style="font-size: 24px;">🔵</span>
+        <span>あお</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. 結果画面 -->
+  <div id="result-screen" class="hidden">
+    <h2>🎉 おつかれさまでした！</h2>
+    <p><strong id="res-name"></strong> さんのスコア</p>
+    <div class="score-display" id="final-score">0 個</div>
+
+    <!-- 自動送信ボタン -->
+    <button id="send-btn" class="btn-main" onclick="sendScore()" style="background: #f59e0b; margin-bottom: 12px; width: 100%;">
+      🚀 スコアを送信する！
+    </button>
+    <div id="send-status" style="font-size: 14px; color: #38bdf8; margin-bottom: 15px;"></div>
+
+    <button onclick="resetGame()" style="background: #475569; color: #fff; border:none; padding:10px 20px; border-radius:20px; font-size: 14px;">もう一度あそぶ</button>
+  </div>
+</div>
+
+<script>
+  // ★新しいクリスマス用GASのウェブアプリURLを貼り付けます
+  const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzlfEKzsBXn7137ZFocRy0KHACgFTYV73gCxGiojAbNBdoWQoqtkK7UxjcQPyVB6e7hwQ/exec";
+
+  let playerName = "";
+  let score = 0;
+  let timeLeft = 15;
+  let timerId = null;
+  let currentTargetColor = "";
+
+  const colors = [
+    { id: 'red', name: 'あか', colorCode: '#ef4444' },
+    { id: 'green', name: 'みどり', colorCode: '#22c55e' },
+    { id: 'blue', name: 'あお', colorCode: '#3b82f6' }
+  ];
+
+  function toggleCustomInput() {
+    const select = document.getElementById('name-select');
+    const container = document.getElementById('custom-name-container');
+    if (select.value === 'OTHER') {
+      container.classList.remove('hidden');
+    } else {
+      container.classList.add('hidden');
+    }
+  }
+
+  function startGame() {
+    const selectValue = document.getElementById('name-select').value;
+    let nameInput = "";
+
+    if (selectValue === 'OTHER') {
+      nameInput = document.getElementById('custom-username').value.trim();
+    } else {
+      nameInput = selectValue;
+    }
+
+    if (!nameInput) {
+      alert("名前を選択するか、入力してください！※自分の名前で遊んでね！");
+      return;
+    }
+
+    playerName = nameInput;
+    score = 0;
+    timeLeft = 15;
+
+    document.getElementById('current-score').innerText = score;
+    document.getElementById('timer').innerText = timeLeft;
+
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+
+    nextQuestion();
+
+    // カウントダウンタイマー開始
+    timerId = setInterval(() => {
+      timeLeft--;
+      document.getElementById('timer').innerText = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timerId);
+        endGame();
+      }
+    }, 1000);
+  }
+
+  function nextQuestion() {
+    const randomObj = colors[Math.floor(Math.random() * colors.length)];
+    currentTargetColor = randomObj.id;
+
+    const label = document.getElementById('target-label');
+    label.innerText = randomObj.name;
+    label.style.color = randomObj.colorCode;
+  }
+
+  function checkAnswer(selectedColor) {
+    if (selectedColor === currentTargetColor) {
+      score += 10; // 正解で10点加算
+    } else {
+      score = Math.max(0, score - 5); // お手付きで5点マイナス
+    }
+    document.getElementById('current-score').innerText = score;
+    nextQuestion();
+  }
+
+  function endGame() {
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.remove('hidden');
+
+    document.getElementById('res-name').innerText = playerName;
+    document.getElementById('final-score').innerText = score + " 点";
+
+    const btn = document.getElementById('send-btn');
+    btn.style.display = "block";
+    btn.disabled = false;
+    document.getElementById('send-status').innerText = "";
+  }
+
+  function sendScore() {
+    const btn = document.getElementById('send-btn');
+    const status = document.getElementById('send-status');
+
+    if (GAS_WEBAPP_URL === "YOUR_NEW_CHRISTMAS_GAS_URL_HERE") {
+      alert("管理者用：新しいGASのWebアプリURLがセットされていません。");
+      return;
+    }
+
+    btn.disabled = true;
+    status.innerText = "送信中...";
+
+    fetch(GAS_WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: playerName,
+        score: score
+      })
+    })
+    .then(() => {
+      status.innerText = "✅ スコアを送信しました！";
+      btn.style.display = "none";
+    })
+    .catch(() => {
+      status.innerText = "❌ 送信に失敗しました。もう一度お試しください。";
+      btn.disabled = false;
+    });
+  }
+
+  function resetGame() {
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+  }
+</script>
+</body>
+</html>
