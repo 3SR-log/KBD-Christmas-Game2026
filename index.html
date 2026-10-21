@@ -16,32 +16,39 @@
     }
     body {
       font-family: sans-serif;
-      background-color: #0f172a;
-      color: #fff;
+      /* 白銀の雪国グラデーション背景 */
+      background: linear-gradient(180deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%);
+      color: #1e293b;
       text-align: center;
       margin: 0;
       padding: 10px;
+      min-height: 100vh;
     }
-    h1 { color: #ff4d4d; font-size: 22px; margin-top: 5px; margin-bottom: 10px; }
+    h1 { color: #dc2626; font-size: 22px; margin-top: 5px; margin-bottom: 10px; text-shadow: 0 1px 2px #fff; }
     .card {
-      background: #1e293b;
-      border-radius: 12px;
+      /* 白く透明感のあるスノーカード */
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
       padding: 15px;
       max-width: 400px;
       margin: 0 auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      box-shadow: 0 8px 20px rgba(186, 230, 253, 0.6), 0 2px 6px rgba(0,0,0,0.05);
+      border: 2px solid #ffffff;
     }
-    input[type="text"] {
+    input[type="text"], select {
       width: 85%;
       padding: 10px;
       font-size: 16px;
-      border-radius: 6px;
-      border: none;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
       margin-bottom: 10px;
       text-align: center;
+      background: #f8fafc;
+      color: #1e293b;
     }
     button.btn-main {
-      background: #22c55e;
+      background: #16a34a;
       color: white;
       border: none;
       padding: 12px 24px;
@@ -49,19 +56,22 @@
       font-weight: bold;
       border-radius: 30px;
       cursor: pointer;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
     }
     #play-area {
       position: relative;
       width: 100%;
       height: 200px;
-      background: #090d16;
-      border-radius: 10px;
+      /* 氷の世界のような透明感ある濃紺グラデーション（プレゼントが映える） */
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 12px;
       margin: 5px 0 10px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border: 2px solid #334155;
+      border: 2px solid #e2e8f0;
+      box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
     }
     
     /* プレゼント画像のスタイル */
@@ -83,7 +93,7 @@
       height: 24px;
       font-size: 18px;
       font-weight: bold;
-      color: #38bdf8;
+      color: #0284c7;
       margin-bottom: 5px;
     }
 
@@ -108,30 +118,31 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.15);
     }
     .color-btn:active {
       transform: translateY(3px);
       box-shadow: none;
     }
     .btn-red { background: #ef4444; }
-    .btn-green { background: #22c55e; }
-    .btn-blue { background: #3b82f6; }
+    .btn-green { background: #16a34a; }
+    .btn-blue { background: #2563eb; }
 
     .hidden { display: none !important; }
-    .score-display { font-size: 44px; color: #fef08a; font-weight: bold; margin: 5px 0; }
+    .score-display { font-size: 44px; color: #d97706; font-weight: bold; margin: 5px 0; }
     .title-badge { 
       font-size: 18px; 
-      color: #f59e0b; 
-      background: #334155; 
-      padding: 6px 12px; 
+      color: #0284c7; 
+      background: #e0f2fe; 
+      padding: 6px 14px; 
       border-radius: 20px; 
       display: inline-block;
       margin-bottom: 10px;
       font-weight: bold;
+      border: 1px solid #bae6fd;
     }
-    .info-text { font-size: 14px; color: #cbd5e1; }
-    .timer-text { font-size: 22px; color: #f59e0b; font-weight: bold; }
+    .info-text { font-size: 14px; color: #475569; }
+    .timer-text { font-size: 22px; color: #dc2626; font-weight: bold; }
 
     /* 虹色グラアニメーション */
     @keyframes rainbow {
@@ -156,7 +167,7 @@
     
     <p class="info-text" style="font-size: 12px; margin-bottom: 5px;">お名前を選んでね</p>
 
-    <select id="name-select" onchange="toggleCustomInput()" style="width: 85%; padding: 10px; font-size: 16px; border-radius: 6px; border: none; margin-bottom: 10px; text-align: center; background: #fff; color: #333;">
+    <select id="name-select" onchange="toggleCustomInput()">
       <option value="">-- 名前を選択してください --</option>
       <option value="KK">KK</option>
       <option value="JJ">JJ</option>
@@ -185,7 +196,7 @@
   <div id="game-screen" class="hidden">
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
       <div class="timer-text">残り: <span id="timer">15</span> 秒</div>
-      <div class="info-text" style="font-size: 16px;">スコア: <strong id="current-score" style="color:#fef08a; font-size: 20px;">0</strong> 点</div>
+      <div class="info-text" style="font-size: 16px; color: #1e293b;">スコア: <strong id="current-score" style="color:#d97706; font-size: 20px;">0</strong> 点</div>
     </div>
 
     <div class="feedback" id="feedback"></div>
@@ -225,9 +236,9 @@
     <button id="send-btn" class="btn-main" onclick="sendScore()" style="background: #f59e0b; margin-bottom: 12px; width: 100%;">
       🚀 スコアを送信する！
     </button>
-    <div id="send-status" style="font-size: 14px; color: #38bdf8; margin-bottom: 15px;"></div>
+    <div id="send-status" style="font-size: 14px; color: #0284c7; margin-bottom: 15px;"></div>
 
-    <button onclick="resetGame()" style="background: #475569; color: #fff; border:none; padding:10px 20px; border-radius:20px; font-size: 14px;">もう一度あそぶ</button>
+    <button onclick="resetGame()" style="background: #64748b; color: #fff; border:none; padding:10px 20px; border-radius:20px; font-size: 14px;">もう一度あそぶ</button>
   </div>
 </div>
 
@@ -390,25 +401,25 @@
     if (currentTargetColor === 'rainbow') {
       score += 30; // プレミアムボーナス
       fb.innerText = "🌟 BONUS +30! 🌟";
-      fb.style.color = "#facc15";
+      fb.style.color = "#d97706";
     } else if (selectedColor === currentTargetColor) {
       score += 10; // 正解
 
       // 階級スピード判定
       if (reactionTime < 350) {
         fb.innerText = "⚡ 超神速サンタ!!";
-        fb.style.color = "#f43f5e";
+        fb.style.color = "#dc2626";
       } else if (reactionTime < 600) {
         fb.innerText = "🎅 ベテランサンタ!";
-        fb.style.color = "#38bdf8";
+        fb.style.color = "#0284c7";
       } else {
         fb.innerText = "🛷 見習いサンタ";
-        fb.style.color = "#4ade80";
+        fb.style.color = "#16a34a";
       }
     } else {
       score = Math.max(0, score - 5); // お手付き
       fb.innerText = "❄️ トナカイつまずく! (-5)";
-      fb.style.color = "#94a3b8";
+      fb.style.color = "#64748b";
     }
 
     document.getElementById('current-score').innerText = score;
