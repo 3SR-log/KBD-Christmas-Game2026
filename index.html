@@ -56,7 +56,7 @@
       height: 200px;
       background: #090d16;
       border-radius: 10px;
-      margin: 10px 0;
+      margin: 5px 0 10px 0;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -66,17 +66,25 @@
     
     /* プレゼント画像のスタイル */
     #target-present-icon {
-      width: 100px;
-      height: 100px;
-      margin-bottom: 5px;
-      transition: transform 0.1s ease;
+      width: 95px;
+      height: 95px;
+      margin-bottom: 2px;
     }
 
     #target-label {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: bold;
       letter-spacing: 2px;
       text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    /* リアルタイム判定表示 */
+    .feedback {
+      height: 24px;
+      font-size: 18px;
+      font-weight: bold;
+      color: #38bdf8;
+      margin-bottom: 5px;
     }
 
     /* 指が太くても乾燥していても押しやすい巨大3大ボタン */
@@ -85,7 +93,7 @@
       gap: 8px;
       justify-content: space-between;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 5px;
     }
     .color-btn {
       flex: 1;
@@ -111,9 +119,29 @@
     .btn-blue { background: #3b82f6; }
 
     .hidden { display: none !important; }
-    .score-display { font-size: 48px; color: #fef08a; font-weight: bold; margin: 10px 0; }
+    .score-display { font-size: 44px; color: #fef08a; font-weight: bold; margin: 5px 0; }
+    .title-badge { 
+      font-size: 18px; 
+      color: #f59e0b; 
+      background: #334155; 
+      padding: 6px 12px; 
+      border-radius: 20px; 
+      display: inline-block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
     .info-text { font-size: 14px; color: #cbd5e1; }
     .timer-text { font-size: 22px; color: #f59e0b; font-weight: bold; }
+
+    /* 虹色グラアニメーション */
+    @keyframes rainbow {
+      0% { stop-color: #ff0000; }
+      20% { stop-color: #ffff00; }
+      40% { stop-color: #00ff00; }
+      60% { stop-color: #00ffff; }
+      80% { stop-color: #ff00ff; }
+      100% { stop-color: #ff0000; }
+    }
   </style>
 </head>
 <body>
@@ -124,6 +152,7 @@
   <!-- 1. スタート画面 -->
   <div id="start-screen">
     <p class="info-text">出てくるプレゼントと同じ色のボタンを素早く押して仕分けよう！（制限時間15秒）</p>
+    <p class="info-text" style="color: #fef08a; font-size: 13px;">🌟たまに出てくる虹色ボックスはどれを押しても＋30点！</p>
     
     <p class="info-text" style="font-size: 12px; margin-bottom: 5px;">お名前を選んでね</p>
 
@@ -159,6 +188,8 @@
       <div class="info-text" style="font-size: 16px;">スコア: <strong id="current-score" style="color:#fef08a; font-size: 20px;">0</strong> 点</div>
     </div>
 
+    <div class="feedback" id="feedback"></div>
+
     <div id="play-area">
       <!-- 色ごとに動的に差し替わるSVGプレゼント画像 -->
       <div id="target-present-icon"></div>
@@ -185,7 +216,9 @@
   <!-- 3. 結果画面 -->
   <div id="result-screen" class="hidden">
     <h2>🎉 おつかれさまでした！</h2>
-    <p><strong id="res-name"></strong> さんのスコア</p>
+    <p><strong id="res-name"></strong> さんの獲得称号</p>
+    <div class="title-badge" id="player-title">🏆 時空を越える光のサンタ</div>
+    
     <div class="score-display" id="final-score">0 点</div>
 
     <!-- 自動送信ボタン -->
@@ -207,8 +240,9 @@
   let timeLeft = 15;
   let timerId = null;
   let currentTargetColor = "";
+  let questionStartTime = 0;
 
-  // 各色のSVG画像データ（箱の色とリボンの色をそれぞれ最適化）
+  // 各色のSVG画像データ（通常色＋レインボー）
   const colors = [
     { 
       id: 'red', 
@@ -217,7 +251,6 @@
       svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
               <rect x="15" y="35" width="70" height="50" fill="#ef4444" rx="5"/>
               <rect x="10" y="25" width="80" height="15" fill="#dc2626" rx="3"/>
-              <!-- 黄色のリボン -->
               <rect x="42" y="25" width="16" height="60" fill="#facc15"/>
               <rect x="15" y="52" width="70" height="16" fill="#facc15"/>
               <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#facc15"/>
@@ -231,7 +264,6 @@
       svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
               <rect x="15" y="35" width="70" height="50" fill="#22c55e" rx="5"/>
               <rect x="10" y="25" width="80" height="15" fill="#16a34a" rx="3"/>
-              <!-- 赤色のリボン -->
               <rect x="42" y="25" width="16" height="60" fill="#ef4444"/>
               <rect x="15" y="52" width="70" height="16" fill="#ef4444"/>
               <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ef4444"/>
@@ -245,7 +277,6 @@
       svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
               <rect x="15" y="35" width="70" height="50" fill="#3b82f6" rx="5"/>
               <rect x="10" y="25" width="80" height="15" fill="#2563eb" rx="3"/>
-              <!-- 白色のリボン -->
               <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
               <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
               <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
@@ -253,6 +284,29 @@
             </svg>`
     }
   ];
+
+  // 虹色プレミアムBOX用データ
+  const rainbowColor = {
+    id: 'rainbow',
+    name: '🌟 プレミアム 🌟',
+    colorCode: '#facc15',
+    svg: `<svg viewBox="0 0 100 100" width="100%" height="100%">
+            <defs>
+              <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ff4d4d"/>
+                <stop offset="33%" stop-color="#facc15"/>
+                <stop offset="66%" stop-color="#22c55e"/>
+                <stop offset="100%" stop-color="#3b82f6"/>
+              </linearGradient>
+            </defs>
+            <rect x="15" y="35" width="70" height="50" fill="url(#rainbowGrad)" rx="5"/>
+            <rect x="10" y="25" width="80" height="15" fill="url(#rainbowGrad)" rx="3"/>
+            <rect x="42" y="25" width="16" height="60" fill="#ffffff"/>
+            <rect x="15" y="52" width="70" height="16" fill="#ffffff"/>
+            <path d="M 35 25 C 20 10, 45 5, 45 25 Z" fill="#ffffff"/>
+            <path d="M 65 25 C 80 10, 55 5, 55 25 Z" fill="#ffffff"/>
+          </svg>`
+  };
 
   function toggleCustomInput() {
     const select = document.getElementById('name-select');
@@ -285,6 +339,7 @@
 
     document.getElementById('current-score').innerText = score;
     document.getElementById('timer').innerText = timeLeft;
+    document.getElementById('feedback').innerText = "";
 
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('result-screen').classList.add('hidden');
@@ -304,24 +359,58 @@
   }
 
   function nextQuestion() {
-    const randomObj = colors[Math.floor(Math.random() * colors.length)];
-    currentTargetColor = randomObj.id;
+    // 15%の確率で虹色プレミアムボックス登場！
+    const isRainbow = Math.random() < 0.15;
+    let selectedObj;
+
+    if (isRainbow) {
+      selectedObj = rainbowColor;
+    } else {
+      selectedObj = colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    currentTargetColor = selectedObj.id;
 
     // プレゼントアイコン（SVG）の更新
-    document.getElementById('target-present-icon').innerHTML = randomObj.svg;
+    document.getElementById('target-present-icon').innerHTML = selectedObj.svg;
 
     // 下の文字ラベルの更新
     const label = document.getElementById('target-label');
-    label.innerText = randomObj.name;
-    label.style.color = randomObj.colorCode;
+    label.innerText = selectedObj.name;
+    label.style.color = selectedObj.colorCode;
+
+    questionStartTime = Date.now();
   }
 
   function checkAnswer(selectedColor) {
-    if (selectedColor === currentTargetColor) {
-      score += 10; // 正解で10点加算
+    const reactionTime = Date.now() - questionStartTime;
+    const fb = document.getElementById('feedback');
+
+    // 虹色の場合はどれを押しても正解！
+    if (currentTargetColor === 'rainbow') {
+      score += 30; // プレミアムボーナス
+      fb.innerText = "🌟 BONUS +30! 🌟";
+      fb.style.color = "#facc15";
+    } else if (selectedColor === currentTargetColor) {
+      score += 10; // 正解
+
+      // 階級スピード判定
+      if (reactionTime < 350) {
+        fb.innerText = "⚡ 超神速サンタ!!";
+        fb.style.color = "#f43f5e";
+      } else if (reactionTime < 600) {
+        fb.innerText = "🎅 ベテランサンタ!";
+        fb.style.color = "#38bdf8";
+      } else {
+        fb.innerText = "🛷 見習いサンタ";
+        fb.style.color = "#4ade80";
+      }
     } else {
-      score = Math.max(0, score - 5); // お手付きで5点マイナス
+      score = Math.max(0, score - 5); // お手付き
+      fb.innerText = "❄️ トナカイつまずく! (-5)";
+      fb.style.color = "#94a3b8";
     }
+
     document.getElementById('current-score').innerText = score;
     nextQuestion();
   }
@@ -332,6 +421,18 @@
 
     document.getElementById('res-name').innerText = playerName;
     document.getElementById('final-score').innerText = score + " 点";
+
+    // 獲得称号の決定
+    const titleBox = document.getElementById('player-title');
+    if (score >= 150) {
+      titleBox.innerText = "🏆 時空を越える光のサンタ";
+    } else if (score >= 100) {
+      titleBox.innerText = "🎁 プレゼント仕分けマスター";
+    } else if (score >= 60) {
+      titleBox.innerText = "🛷 がんばり屋のトナカイ";
+    } else {
+      titleBox.innerText = "☃️ うっかり雪だるま";
+    }
 
     const btn = document.getElementById('send-btn');
     btn.style.display = "block";
